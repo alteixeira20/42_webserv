@@ -14,6 +14,7 @@ SRCS		:= \
 	$(SRC_DIR)/config/ConfigParser.cpp \
 	$(SRC_DIR)/config/ConfigToken.cpp \
 	$(SRC_DIR)/config/ConfigTokenizer.cpp \
+	$(SRC_DIR)/config/ListenConfig.cpp \
 	$(SRC_DIR)/config/RouteConfig.cpp \
 	$(SRC_DIR)/config/ServerConfig.cpp \
 	$(SRC_DIR)/http/HttpMethod.cpp
