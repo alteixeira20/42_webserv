@@ -10,6 +10,7 @@ OBJ_DIR		:= obj
 SRCS		:= \
 	$(SRC_DIR)/main.cpp \
 	$(SRC_DIR)/config/Config.cpp \
+	$(SRC_DIR)/config/ConfigException.cpp \
 	$(SRC_DIR)/config/ConfigParser.cpp \
 	$(SRC_DIR)/config/ConfigToken.cpp \
 	$(SRC_DIR)/config/ConfigTokenizer.cpp \
