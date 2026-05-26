@@ -106,12 +106,12 @@ void    ServerConfig::addServerName(const std::string &name)
     _serverNames.push_back(name);
 }
 
-void	ServerConfig::setRoot(const std::string& root)
+void	ServerConfig::setRoot(const std::string &root)
 {
 	_root = root;
 }
 
-void	ServerConfig::setIndex(const std::string& index)
+void	ServerConfig::setIndex(const std::string &index)
 {
 	_index = index;
 }
@@ -122,12 +122,12 @@ void	ServerConfig::setClientMaxBodySize(std::size_t size)
 }
 
 void	ServerConfig::addErrorPage(unsigned int status,
-	const std::string& path)
+	const std::string &path)
 {
 	_errorPages[status] = path;
 }
 
-void	ServerConfig::addRoute(const RouteConfig& route)
+void	ServerConfig::addRoute(const RouteConfig &route)
 {
 	_routes.push_back(route);
 }

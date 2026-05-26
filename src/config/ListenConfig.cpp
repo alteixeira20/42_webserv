@@ -12,13 +12,13 @@ ListenConfig::ListenConfig(const std::string &host, unsigned int port)
 {
 }
 
-ListenConfig::ListenConfig(const ListenConfig& other)
+ListenConfig::ListenConfig(const ListenConfig &other)
 	: _host(other._host),
 	  _port(other._port)
 {
 }
 
-ListenConfig&	ListenConfig::operator=(const ListenConfig& other)
+ListenConfig&	ListenConfig::operator=(const ListenConfig &other)
 {
 	if (this != &other)
 	{
@@ -28,26 +28,26 @@ ListenConfig&	ListenConfig::operator=(const ListenConfig& other)
 	return (*this);
 }
 
-ListenConfig::~ListenConfig(void)
+ListenConfig::~ListenConfig()
 {
 }
 
-const std::string&	ListenConfig::getHost(void) const
+const std::string&	ListenConfig::getHost() const
 {
 	return (_host);
 }
 
-unsigned int	ListenConfig::getPort(void) const
+unsigned int	ListenConfig::getPort() const
 {
 	return (_port);
 }
 
-bool	ListenConfig::equals(const ListenConfig& other) const
+bool	ListenConfig::equals(const ListenConfig &other) const
 {
 	return (_host == other._host && _port == other._port);
 }
 
-void	ListenConfig::setHost(const std::string& host)
+void	ListenConfig::setHost(const std::string &host)
 {
 	_host = host;
 }

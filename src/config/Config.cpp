@@ -15,17 +15,17 @@ static bool containsListen(const std::vector<ListenConfig> &listens,
     return (false);
 }
 
-    Config::Config(void)
+Config::Config()
 	: _servers()
 {
 }
 
-Config::Config(const Config& other)
+Config::Config(const Config &other)
 	: _servers(other._servers)
 {
 }
 
-Config&	Config::operator=(const Config& other)
+Config&	Config::operator=(const Config &other)
 {
 	if (this != &other)
 		_servers = other._servers;
@@ -36,12 +36,12 @@ Config::~Config(void)
 {
 }
 
-void	Config::addServer(const ServerConfig& server)
+void	Config::addServer(const ServerConfig &server)
 {
 	_servers.push_back(server);
 }
 
-const std::vector<ServerConfig>&	Config::getServers(void) const
+const std::vector<ServerConfig>&	Config::getServers() const
 {
 	return (_servers);
 }

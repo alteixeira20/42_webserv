@@ -1,9 +1,9 @@
 #ifndef CONFIG_HPP
 # define CONFIG_HPP
 
-# include <vector>
-# include "config/ListenConfig.hpp"
-# include "config/ServerConfig.hpp"
+#include <vector>
+#include "config/ListenConfig.hpp"
+#include "config/ServerConfig.hpp"
 
 class   Config
 {
