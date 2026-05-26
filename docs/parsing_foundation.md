@@ -1,250 +1,403 @@
-# Parsing Foundation Modules
+# Parsing Foundation
 
-This document describes the implemented parsing foundation on this branch. It does not describe full config parsing or runtime behavior unless the module already exposes the required data for it.
+This document describes the parsing foundation implemented on `feature/parsing-foundation`. It documents the types and boundaries that exist now, plus the intended handoff to the next parser and runtime branches.
+
+It does not claim that full semantic config parsing is implemented. On this branch, `ConfigParser` wires the startup pipeline from file/string input through tokenization into parser state and currently returns an empty `Config`.
+
+## Scope And Ownership
+
+Status: Implemented
+
+- Alexandre / `paalexan`: config parsing foundation, HTTP method representation, future HTTP parsing and route resolution.
+- Farreca / `jopedro-`: runtime, sockets, event loop, non-blocking I/O.
+- Shared: CGI integration and final wiring between parsed config and runtime.
+
+Status: Not responsible for
+
+- This branch does not implement socket setup, the event loop, HTTP request parsing, response generation, filesystem serving, uploads, DELETE behavior, or CGI execution.
+- This branch does not implement complete parsing of `server` and `location` directives.
+
+## Implemented Pipeline
+
+Status: Implemented
+
+The current parsing pipeline is:
+
+```text
+config path -> file content -> ConfigTokenizer -> vector<ConfigToken>
+            -> ConfigParser parser state -> Config
+```
+
+`ConfigParser::parseFile()` opens and reads a file, then delegates to `parseString()`. `parseString()` tokenizes the content and stores the token stream in parser state through `reset()`. The semantic parser will be built on top of this state in the next branch.
+
+Known limitation: at this stage, `parseFile()` proves the file-read and tokenization pipeline only. It does not yet validate that the file contains a usable server block.
+
+Important invariants:
+
+- Invalid config is a startup concern, not a per-request HTTP behavior.
+- Parser state owns its token vector; later parser code must not keep references to temporary tokenizer output.
+- Runtime side effects must stay outside config parsing. Parsing must not open sockets, execute CGI, or touch request handling state.
+
+Status: Planned
+
+- Parse block structure and directives into `ServerConfig`, `RouteConfig`, and `ListenConfig`.
+- Validate syntax and semantics before runtime starts binding sockets.
+- Throw `ConfigException` with useful line/column information when parsing or validation fails.
 
 ## HttpMethod
 
 Status: Implemented
 
-Purpose: represents the HTTP methods currently recognized by the project: `GET`, `POST`, and `DELETE`, plus `HTTP_METHOD_UNKNOWN` for invalid or unsupported input.
+Purpose: shared representation for the mandatory methods `GET`, `POST`, and `DELETE`, plus `HTTP_METHOD_UNKNOWN`.
 
-Why it exists: the subject requires support for `GET`, `POST`, and `DELETE`. Config parsing, HTTP parsing, and route validation need one shared representation of those methods.
+Why it exists: config parsing, HTTP parsing, and route permission checks need one common method vocabulary. Unknown methods must not crash the server; they must remain representable so later layers can reject or handle them deliberately.
 
-What it does: provides an enum and free functions to parse a string into a method, convert a method back to text, check whether a method is supported, and check whether a vector already contains a method.
+What it does:
 
-Not responsible for: parsing HTTP requests, enforcing route permissions, generating `405 Method Not Allowed`, or deciding whether an unknown method is a syntax error or an unsupported-method error.
+- Defines the `HttpMethod` enum.
+- Converts strings to methods with `parseHttpMethod()`.
+- Converts methods back to text with `httpMethodToString()`.
+- Identifies supported methods with `isSupportedHttpMethod()`.
+- Checks method vectors with `containsHttpMethod()`.
+
+What it does not do:
+
+- It does not parse full HTTP requests.
+- It does not enforce route permissions.
+- It does not generate `405 Method Not Allowed`.
+- It does not decide how runtime responds to an unknown method.
 
 Important invariants:
+
 - `HTTP_METHOD_UNKNOWN` is not a supported method.
-- Supported methods are uppercase only.
+- Supported method names are uppercase.
 - Method lists should not rely on duplicate entries.
+- The representation is an enum plus free functions, not a class or template.
 
-Subject/evaluation support: gives both the HTTP layer and config layer a common vocabulary for the mandatory methods evaluators will test.
+How it supports evaluation: evaluators will test `GET`, `POST`, `DELETE`, and possibly invalid methods. This type gives config and HTTP parsing a shared, non-crashing representation for those cases.
 
-Design decisions:
-- Uses an enum plus free functions, not a class or template.
-- Keeps domain-specific logic explicit and simple for C++98.
-- Templates are reserved for genuinely generic utilities, not forced into domain-specific code.
-
-Status: Planned
-
-- Parser-level validation should reject methods that parse to `HTTP_METHOD_UNKNOWN` inside route config.
-- Runtime should use the same enum to compare request methods against route methods.
+How it connects to the next branch: config parsing should reject unknown methods inside `allowed_methods` or equivalent route directives, while HTTP request parsing can still represent an unknown request method safely.
 
 ## ConfigToken
 
 Status: Implemented
 
-Purpose: stores one tokenizer result: token type, string value, source line, and source column.
+Purpose: one lexical token produced by the tokenizer.
 
-Why it exists: parser errors need stable source locations, and the parser needs a small typed object instead of raw characters.
+Why it exists: parser code needs a small typed value with source location instead of raw character scanning. Location data is required for useful startup errors.
 
-What it does: models word tokens, open brace, close brace, semicolon, and end-of-file. Exposes read-only getters for parser use.
+What it stores:
 
-Not responsible for: knowing directive names, validating directive arguments, normalizing paths, or deciding whether a token is legal in a specific parser state.
+- token type;
+- token value;
+- source line;
+- source column.
+
+Recognized token types are `WORD`, `OPEN_BRACE`, `CLOSE_BRACE`, `SEMICOLON`, and `END`.
+
+What it does not do:
+
+- It does not know directive names.
+- It does not validate directive scope or argument count.
+- It does not normalize paths, ports, sizes, methods, or status codes.
 
 Important invariants:
-- From the parser's point of view, `ConfigToken` is immutable: parser code reads tokens through const getters.
-- Line and column describe where the token starts.
-- `CONFIG_TOKEN_END` marks the end of the token stream.
 
-Subject/evaluation support: enables precise config diagnostics instead of a generic startup failure, which matters when evaluators provide malformed config files.
+- From parser code, tokens are read through const getters.
+- Line and column identify the token start.
+- `CONFIG_TOKEN_END` marks the end of the stream.
 
-Design decisions:
-- Token values are stored as strings even for punctuation so debugging and error messages stay simple.
-- Token semantics are intentionally shallow; the parser owns config meaning.
+How it supports evaluation: malformed configs should fail with a useful location instead of a vague startup error.
+
+How it connects to the next branch: semantic parser errors should use the current token's line and column when throwing `ConfigException`.
 
 ## ConfigException
 
 Status: Implemented
 
-Purpose: represents startup configuration errors with a message and source location.
+Purpose: startup configuration error type with message, line, and column.
 
-Why it exists: invalid config must fail startup cleanly before sockets are opened or runtime state is partially initialized.
+Why it exists: invalid config must stop startup cleanly before runtime opens sockets or initializes partial server state.
 
-What it does: extends `std::exception`, stores an error message, and stores line and column values accessible through getters.
+What it does:
 
-Not responsible for: recovering from invalid config, formatting multi-line diagnostics, collecting multiple errors, or deciding process exit policy.
+- Extends `std::exception`.
+- Stores an error message.
+- Stores line and column values.
+- Exposes the message through `what()`.
+
+What it does not do:
+
+- It does not recover from invalid config.
+- It does not collect multiple errors.
+- It does not decide process exit policy.
+- It does not format multi-line diagnostics by itself.
 
 Important invariants:
-- `what()` returns the stored message.
-- `getLine()` and `getColumn()` preserve the location supplied by the throwing parser/tokenizer code.
-- A config error is a startup error, not a per-request HTTP response.
 
-Subject/evaluation support: supports resilience by making malformed configuration a controlled startup failure rather than undefined behavior.
+- A `ConfigException` represents a startup config failure.
+- `getLine()` and `getColumn()` preserve the location supplied by the throwing parser or tokenizer code.
+- Missing-file and read-file errors currently use line `0`, column `0`.
 
-Design decisions:
-- Used for startup config errors with line/column context.
-- Keeps exception payload small: message, line, column.
-- Formatting policy remains outside the exception object.
+How it supports evaluation: malformed config files can fail deterministically before runtime state is created.
 
-Status: Planned
-
-- Parser code should throw `ConfigException` when syntax or semantic validation fails.
-- The executable should catch it at startup and print message plus line/column.
+How it connects to the next branch: every syntax or semantic config failure should use this type so the executable can print a consistent startup error.
 
 ## ConfigTokenizer
 
 Status: Implemented
 
-Purpose: converts config file text into a vector of `ConfigToken` objects.
+Purpose: converts config file text into `ConfigToken` objects.
 
-Why it exists: config parsing is easier to test and explain when lexical scanning is separate from grammar and directive validation.
+Why it exists: lexical scanning is separate from grammar and directive semantics, which keeps both tokenizer tests and parser errors easier to reason about.
 
-What it does: scans text statefully, tracks index/line/column, skips whitespace and `#` comments, recognizes words, `{`, `}`, `;`, and appends an EOF token.
+What it does:
 
-Not responsible for: validating block structure, recognizing directive names, parsing ports or sizes, validating routes, applying inheritance, or checking filesystem paths.
+- Tracks content, current index, line, and column.
+- Ignores whitespace.
+- Ignores `#` comments until newline.
+- Recognizes `{`, `}`, and `;` as standalone tokens.
+- Reads all other contiguous non-whitespace, non-comment, non-punctuation text as `WORD`.
+- Appends a final `END` token.
+
+What it does not do:
+
+- It does not recognize `server`, `listen`, `root`, or any directive name.
+- It does not parse strings, ports, paths, body sizes, methods, or status codes.
+- It does not validate block structure.
+- It does not decide whether a word is legal in the current parser state.
 
 Important invariants:
-- Tokenizer recognizes only words, braces, semicolons, comments, and EOF.
-- Parser owns all semantics.
-- Each call to `tokenize()` resets tokenizer state to the beginning of the supplied content.
-- Comments run from `#` to newline and do not produce tokens.
 
-Subject/evaluation support: provides the first line of defense for config startup behavior and enables useful errors for syntax issues near a token location.
+- `tokenize()` resets tokenizer state for the provided content.
+- Comments do not produce tokens.
+- Punctuation tokens use their source position.
+- Parser owns all semantic meaning.
 
-Design decisions:
-- Stateful tokenizer keeps helper functions small and clear in C++98.
-- It does not use templates because tokenization here is domain-specific, not generic.
-- It keeps the accepted lexical grammar narrow so unsupported syntax fails in the parser instead of being guessed by the scanner.
+How it supports evaluation: the config layer can reject malformed files at startup with deterministic token positions, instead of relying on fragile string splitting.
 
-Status: Planned
-
-- Parser tests should assert token streams for comments, braces, semicolons, words, and EOF.
-- Parser code should use token line/column when raising `ConfigException`.
+How it connects to the next branch: parser tests should cover comments, whitespace, braces, semicolons, words, and EOF before semantic directive tests are added.
 
 ## ListenConfig
 
 Status: Implemented
 
-Purpose: models one listen endpoint: host plus port.
+Purpose: value object for one listen endpoint: host plus port.
 
-Why it exists: the subject requires defining all interface:port pairs on which the server listens. Runtime needs endpoint objects before it can bind sockets.
+Why it exists: runtime needs typed endpoint data before it can bind sockets, and the subject requires multiple ports and host/interface configuration.
 
-What it does: stores host and port, exposes getters/setters, and compares two endpoints through `equals()`.
+What it does:
 
-Not responsible for: opening sockets, resolving hostnames, validating port range, detecting conflicts across servers, or deciding whether `0.0.0.0` overlaps another host.
+- Stores host string and port number.
+- Exposes getters and setters.
+- Compares endpoints with exact `host` and `port` equality through `equals()`.
+
+What it does not do:
+
+- It does not open sockets.
+- It does not validate port range.
+- It does not resolve hostnames.
+- It does not detect wildcard overlap such as `0.0.0.0:8080` versus `127.0.0.1:8080`.
 
 Important invariants:
-- One `ListenConfig` represents one host:port pair.
-- Equality is exact host string equality plus exact port equality.
-- Default construction uses host `0.0.0.0` and port `0` until parser validation supplies real values.
 
-Subject/evaluation support: maps directly to the mandatory multi-port and multi-interface configuration requirement.
+- One instance means one configured host:port pair.
+- Equality is exact string equality for host and exact integer equality for port.
+- Default construction uses host `0.0.0.0` and port `0` until parser validation supplies accepted values.
 
-Design decisions:
-- Kept as a value object so `ServerConfig` and `Config` can store vectors of endpoints.
-- Endpoint uniqueness is handled by exact comparison, not by socket/runtime side effects.
+How it supports evaluation: maps directly to the requirement to configure all interface:port pairs.
 
-Status: Planned
-
-- Parser validation should reject invalid ports and malformed listen directives before runtime sees them.
+How it connects to the next branch: `listen` parsing must validate host and port before runtime receives the object.
 
 ## RouteConfig
 
 Status: Implemented
 
-Purpose: stores route-level configuration values parsed from a route block.
+Purpose: stores route-level configuration.
 
-Why it exists: the subject requires URL/route-specific rules for methods, root, directory listing, index, redirects, uploads, and CGI.
+Why it exists: the subject requires route-specific behavior for allowed methods, roots, directory index, autoindex, redirects, uploads, and CGI.
 
-What it does: stores route path, allowed methods, optional root, optional index, optional autoindex flag, optional redirect, optional upload directory, and CGI handlers by extension.
+What it stores:
 
-Not responsible for: matching request URLs, resolving inherited server defaults, checking filesystem access, executing CGI, storing uploaded files, deleting files, or generating HTTP responses.
+- route path;
+- allowed methods;
+- optional route root;
+- optional index;
+- optional autoindex flag;
+- optional redirect status and target;
+- optional upload directory;
+- CGI extension-to-executable map.
+
+What it does not do:
+
+- It does not match request URLs.
+- It does not apply server-level inheritance.
+- It does not check filesystem access.
+- It does not execute CGI.
+- It does not store uploads.
+- It does not generate HTTP responses.
 
 Important invariants:
-- `has*()` flags distinguish an omitted directive from a directive set to a falsey value.
+
+- `hasRoot()`, `hasIndex()`, `hasAutoIndex()`, `hasRedirect()`, and `hasUploadDir()` distinguish omitted directives from explicitly configured falsey values.
 - `addAllowedMethod()` avoids duplicate method entries.
-- CGI handlers are keyed by extension; adding the same extension replaces the previous executable path.
-- A route object may be incomplete until parser validation and inheritance are applied.
+- Adding a CGI handler for an existing extension replaces that extension's executable path.
+- A route object may be incomplete until parser validation and inheritance are implemented.
 
-Subject/evaluation support: holds the data needed to demonstrate every mandatory route rule during evaluation.
+How it supports evaluation: it holds the data required to demonstrate every mandatory route-level rule: methods, root override, index, autoindex, redirect, upload directory, and CGI mapping.
 
-Design decisions:
-- Route config is a data holder, not a route resolver.
-- Optional route fields use explicit presence flags to keep inheritance decisions unambiguous.
-- CGI is represented as extension-to-executable mapping because the subject asks for CGI execution based on file extension.
-
-Status: Planned
-
-- Parser validation should reject invalid redirect statuses, unsupported methods, invalid CGI extensions, duplicate route paths, and non-redirect routes without an effective root.
-- Route resolver should apply longest-prefix matching outside `RouteConfig`.
+How it connects to the next branch: semantic parsing must fill this object from `location` blocks, reject invalid values, and later route resolution must use the typed fields instead of reparsing directive strings.
 
 ## ServerConfig
 
 Status: Implemented
 
-Purpose: models one `server` block.
+Purpose: value object for one server block.
 
-Why it exists: the subject suggests an NGINX-like server section and requires multiple websites/listener configurations in one config file.
+Why it exists: the project needs multiple server definitions, each with its own listen endpoints, names, defaults, error pages, body-size limit, and routes.
 
-What it does: stores multiple listen endpoints, server names, root, index, client max body size, error pages, and route configs.
+What it stores:
 
-Not responsible for: binding sockets, selecting a server for an incoming request, validating directive syntax, resolving route inheritance, or serving default error pages.
+- multiple `ListenConfig` endpoints;
+- server names;
+- server root;
+- server index;
+- client max body size;
+- error pages by status code;
+- route configs.
+
+What it does not do:
+
+- It does not bind sockets.
+- It does not select the server for a request.
+- It does not validate directive syntax.
+- It does not apply route inheritance.
+- It does not serve default files or error pages.
 
 Important invariants:
-- One `ServerConfig` represents one server block.
-- A server can contain multiple `ListenConfig` endpoints.
-- `addListen()` ignores duplicate endpoints within the same server block.
-- `addServerName()` ignores duplicate names within the same server block.
-- Default index is `index.html` and default client max body size is `1000000` until parser config changes them.
 
-Subject/evaluation support: stores the server-level defaults and route collection required for static serving, body limits, custom error pages, and multi-listen demos.
+- One instance represents one server block.
+- A server may contain multiple listen endpoints.
+- `addListen()` ignores exact duplicate endpoints inside the same server object.
+- `addServerName()` ignores duplicate names inside the same server object.
+- The default index is `index.html`.
+- The default client max body size is `1000000`.
 
-Design decisions:
-- Server-level data is grouped separately from global config so multiple server blocks can coexist.
-- Error pages are keyed by status code for direct lookup by response generation later.
-- Multiple listen endpoints live on `ServerConfig` because one server block may listen on more than one host:port.
+How it supports evaluation: stores the server-level data required for multiple ports, different hostnames, error pages, body-size limits, static roots, and route collections.
 
-Status: Planned
-
-- Parser validation should ensure each server has at least one valid listen endpoint.
-- Runtime/server selection should use listen endpoint plus optional `server_name` rules outside this object.
+How it connects to the next branch: server-block parsing must populate and validate this object before runtime consumes it.
 
 ## Config
 
 Status: Implemented
 
-Purpose: top-level container for parsed server configuration.
+Purpose: top-level owner for all parsed server blocks.
 
-Why it exists: runtime startup needs a single object containing all parsed server blocks and the deduplicated listen endpoints it must bind.
+Why it exists: startup needs one object that can be handed from config parsing to runtime setup.
 
-What it does: stores server blocks and exposes `getUniqueListens()` to return each exact host:port pair once across all servers.
+What it does:
 
-Not responsible for: parsing files, validating server blocks, binding sockets, selecting virtual hosts, or applying route inheritance.
+- Owns all `ServerConfig` objects.
+- Exposes all servers through `getServers()`.
+- Computes unique listen endpoints through `getUniqueListens()`.
+
+What it does not do:
+
+- It does not parse files.
+- It does not validate server blocks.
+- It does not bind sockets.
+- It does not select virtual hosts.
+- It does not apply route inheritance.
 
 Important invariants:
-- `Config` can contain multiple `ServerConfig` objects.
-- `getUniqueListens()` deduplicates endpoints across all server blocks using `ListenConfig::equals()`.
-- Runtime should bind one socket per unique host:port pair, not one socket per server block.
 
-Subject/evaluation support: supports multiple configured websites/listeners while preserving the non-blocking runtime requirement that each actual socket is managed once by the event loop.
+- Multiple server blocks may share the same exact host:port endpoint.
+- `getUniqueListens()` deduplicates endpoints across all servers using `ListenConfig::equals()`.
+- Runtime should bind one socket per unique endpoint, not one socket per server block.
 
-Design decisions:
-- `Config` exposes unique listen endpoints so runtime binds one socket per host:port.
-- Multiple server blocks may share an endpoint for `server_name` routing, but runtime must bind only once.
-- The top-level object does not decide request routing; it only exposes the data needed by runtime and route-selection layers.
+How it supports evaluation: allows multiple configured websites or server blocks to share a port for `server_name` routing without causing duplicate bind attempts.
+
+How it connects to the next branch: once semantic parsing is implemented, `Config` becomes the object passed to runtime initialization and later server selection logic.
+
+## Handoff To Runtime Track
+
+Status: Implemented
+
+`Config::getUniqueListens()` exists specifically for runtime startup.
+
+The intended runtime flow is:
+
+```text
+Config
+  -> getUniqueListens()
+  -> bind one non-blocking listening socket per unique host:port
+  -> keep mapping from endpoint to all ServerConfig objects using that endpoint
+```
+
+This matters because several server blocks may intentionally share one endpoint:
+
+```text
+server A: listen 127.0.0.1:8080; server_name a.local;
+server B: listen 127.0.0.1:8080; server_name b.local;
+```
+
+Runtime must bind `127.0.0.1:8080` once. After accepting a connection on that socket, later routing can use the request `Host` header and configured `server_name` values to choose the effective `ServerConfig`.
 
 Status: Planned
 
-- Startup code should reject an empty `Config` after parsing.
-- Runtime should keep a mapping from bound endpoint to the server blocks that share it.
+- Keep an endpoint-to-server-list mapping after binding.
+- Decide default-server behavior for an endpoint when `Host` is missing or does not match any configured `server_name`.
+- Validate duplicate or ambiguous host:port plus `server_name` combinations during config parsing before runtime setup.
 
-## Cross-Module Notes
+Status: Not responsible for
+
+- `getUniqueListens()` does not create sockets.
+- It does not decide wildcard binding policy.
+- It does not perform `server_name` matching.
+- It does not guarantee that the OS will allow a bind.
+
+Evaluation-critical runtime constraints:
+
+- The final runtime must use only one `poll`, `select`, or equivalent call in the main loop.
+- That call must monitor read and write readiness at the same time.
+- Sockets and CGI pipes must not be read from or written to unless readiness was reported.
+- `errno` must not be used after `read`, `recv`, `write`, or `send` to decide normal I/O behavior.
+
+## Next Branch: feature/config-parser
+
+Status: Planned
+
+The next branch should turn the foundation into a semantic parser. Remaining work:
+
+- parse server blocks;
+- parse listen directives;
+- parse `server_name`;
+- parse `root`, `index`, `client_max_body_size`, and `error_page`;
+- parse location blocks;
+- parse `allowed_methods` or the final chosen directive name;
+- parse `autoindex`;
+- parse redirects;
+- parse upload directory directives;
+- parse CGI extension-to-executable mappings;
+- validate duplicate or ambiguous host:port plus `server_name` configs;
+- validate missing roots, listens, and routes according to final grammar rules;
+- implement route/server lookup later, outside the raw data holders.
+
+Validation should reject misspelled directives, wrong directive scope, invalid argument counts, malformed numbers, unsupported methods, invalid redirect statuses, invalid CGI extension syntax, and duplicate route paths where the final grammar forbids them.
+
+## Cross-Module Summary
 
 Status: Implemented
 
 - `ConfigTokenizer` produces `ConfigToken` values.
+- `ConfigParser` stores the token stream and currently returns an empty `Config`.
 - `RouteConfig` uses `HttpMethod` for allowed methods.
 - `ServerConfig` owns `ListenConfig` and `RouteConfig` values.
 - `Config` owns `ServerConfig` values and computes unique `ListenConfig` endpoints.
 
-Status: Planned
-
-- `ConfigParser` should connect these foundations into a complete validated `Config`.
-- Parser validation should happen before runtime socket setup.
-- Runtime and HTTP layers should consume the typed config objects instead of reparsing directive strings.
-
 Status: Not responsible for
 
-- These modules do not implement the event loop, non-blocking I/O, HTTP request parsing, static file serving, upload storage, CGI execution, or response generation.
+- These modules are not the runtime.
+- These modules are not the route resolver.
+- These modules are not CGI execution.
+- These modules are not HTTP response generation.

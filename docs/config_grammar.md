@@ -5,6 +5,10 @@ It is a parser contract, not an implementation note: if the parser accepts or
 rejects something differently, update either the parser or this document before
 evaluation.
 
+Current status: on `feature/parsing-foundation`, the tokenizer, config data
+holders, and parser pipeline are implemented, but full semantic parsing of
+`server` and route directives is planned for the next branch.
+
 ## Module Scope
 
 What it does:
