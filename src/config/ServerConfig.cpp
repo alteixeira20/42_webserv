@@ -22,6 +22,21 @@ ServerConfig::ServerConfig(const ServerConfig &other)
 {
 }
 
+ServerConfig&	ServerConfig::operator=(const ServerConfig &other)
+{
+	if (this != &other)
+	{
+		_listens = other._listens;
+		_serverNames = other._serverNames;
+		_root = other._root;
+		_index = other._index;
+		_clientMaxBodySize = other._clientMaxBodySize;
+		_errorPages = other._errorPages;
+		_routes = other._routes;
+	}
+	return (*this);
+}
+
 ServerConfig::~ServerConfig()
 {
 }
