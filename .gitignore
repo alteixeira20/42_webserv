@@ -1,0 +1,26 @@
+# Build artifacts
+/obj/
+/webserv
+*.o
+*.a
+*.so
+*.d
+
+# Editor/OS noise
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Runtime/test artifacts
+uploads/*
+!uploads/.gitkeep
+tests/output/
+tests/tmp/
+
+# Logs
+*.log
+
+# Project Subject
+subject*.pdf
