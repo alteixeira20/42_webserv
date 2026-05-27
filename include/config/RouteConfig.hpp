@@ -50,7 +50,7 @@ class   RouteConfig
         bool                    _hasIndex;
         bool                    _hasAutoIndex;
         bool                    _hasRedirect;
-        bool                    _redirectStatus;
+        unsigned int            _redirectStatus;
         std::string             _redirectTarget;
         bool                    _hasUploadDir;
         std::string             _uploadDir;

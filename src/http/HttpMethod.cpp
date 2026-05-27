@@ -11,7 +11,7 @@ HttpMethod	parseHttpMethod(const std::string &value)
 	return (HTTP_METHOD_UNKNOWN);
 }
 
-std::string	httpMethodToString(HttpMethod method)
+std::string	httpMethodToStr(HttpMethod method)
 {
 	if (method == HTTP_METHOD_GET)
 		return ("GET");

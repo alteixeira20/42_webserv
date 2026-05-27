@@ -45,7 +45,7 @@ const char* ConfigException::what() const throw()
 
 unsigned int    ConfigException::getLine() const
 {
-    return (_line);
+	return (_line);
 }
 
 unsigned int    ConfigException::getColumn() const

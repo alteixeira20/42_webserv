@@ -56,7 +56,7 @@ What it does:
 
 - Defines the `HttpMethod` enum.
 - Converts strings to methods with `parseHttpMethod()`.
-- Converts methods back to text with `httpMethodToString()`.
+- Converts methods back to text with `httpMethodToStr()`.
 - Identifies supported methods with `isSupportedHttpMethod()`.
 - Checks method vectors with `containsHttpMethod()`.
 
