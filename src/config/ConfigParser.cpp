@@ -1,28 +1,28 @@
-#include "config/ConfigParser.hpp"
-#include "config/ConfigException.hpp"
-#include "config/ConfigTokenizer.hpp"
 #include <fstream>
 #include <sstream>
+#include "config/ConfigParser.hpp"
+#include "config/ConfigParserErrors.hpp"
+#include "config/ConfigException.hpp"
+#include "config/ConfigTokenizer.hpp"
 
 /*
 ** File reading is kept outside ConfigParser because it is only an input
 ** source detail. The parser itself works from strings and tokens.
 */
-static std::string  readFileContent(const std::string &path)
+static std::string	readFileContent(const std::string& path)
 {
-    std::ifstream       file;
-    std::stringstream   buffer;
+	std::ifstream		file;
+	std::stringstream	buffer;
 
-    file.open(path.c_str());
-
-    if (!file.is_open())
-        throw (ConfigException("could not open config file", 0, 0));
-    buffer << file.rdbuf();
-
-    if (file.bad())
-        throw (ConfigException("could not read config file", 0, 0));
-
-    return (buffer.str());
+	file.open(path.c_str());
+	if (!file.is_open())
+		throw (ConfigException(ConfigParserErrors::COULD_NOT_OPEN_FILE,
+				0, 0));
+	buffer << file.rdbuf();
+	if (file.bad())
+		throw (ConfigException(ConfigParserErrors::COULD_NOT_READ_FILE,
+				0, 0));
+	return (buffer.str());
 }
 
 ConfigParser::ConfigParser()
@@ -64,12 +64,10 @@ Config  ConfigParser::parseFile(const std::string &path)
 Config  ConfigParser::parseString(const std::string &content)
 {
     ConfigTokenizer tokenizer;
-    Config          config;
 
     reset(tokenizer.tokenize(content));
-    (void)config;
 
-    return (config);
+    return (parseConfig());
 }
 
 void    ConfigParser::reset(const std::vector<ConfigToken> &tokens)
@@ -125,4 +123,45 @@ const ConfigToken&	ConfigParser::expect(ConfigTokenType type,
 const ConfigToken&	ConfigParser::expectWord(const std::string &message)
 {
 	return (expect(CONFIG_TOKEN_WORD, message));
+}
+
+Config	ConfigParser::parseConfig()
+{
+	Config	config;
+
+	while (!isAtEnd())
+		config.addServer(parseServer());
+
+	return (config);
+}
+
+ServerConfig	ConfigParser::parseServer()
+{
+	ServerConfig			server;
+	const ConfigToken&	token = expectWord(
+			ConfigParserErrors::EXPECTED_SERVER_BLOCK);
+
+	if (token.getValue() != "server")
+		throw (ConfigException(ConfigParserErrors::EXPECTED_SERVER_BLOCK,
+				token.getLine(), token.getColumn()));
+
+	expect(CONFIG_TOKEN_OPEN_BRACE,
+		ConfigParserErrors::EXPECTED_SERVER_OPEN_BRACE);
+
+	while (!check(CONFIG_TOKEN_CLOSE_BRACE))
+		parseServerDirective(server);
+	expect(CONFIG_TOKEN_CLOSE_BRACE,
+		ConfigParserErrors::EXPECTED_SERVER_CLOSE_BRACE);
+
+	return (server);
+}
+
+void	ConfigParser::parseServerDirective(ServerConfig &server)
+{
+	const ConfigToken&	token = expectWord(
+			ConfigParserErrors::UNKNOWN_SERVER_DIRECTIVE);
+
+	(void)server;
+	throw (ConfigException(ConfigParserErrors::UNKNOWN_SERVER_DIRECTIVE,
+			token.getLine(), token.getColumn()));
 }

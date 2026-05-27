@@ -9,8 +9,8 @@ class   Config
 {
 	public:
 		Config();
-		Config(const Config& other);
-		Config&	operator=(const Config& other);
+		Config(const Config &other);
+		Config&	operator=(const Config &other);
 		~Config();
         
         void                                addServer(const ServerConfig &server);

@@ -3,6 +3,9 @@ NAME		:= webserv
 CXX			:= c++
 CXXFLAGS	:= -Wall -Wextra -Werror -std=c++98
 INC			:= -Iinclude
+GIT			:= git
+DIFF_OUT	:= .git/diff_report.txt
+DIFF_FILES	:= .gitignore Makefile README.md configs docs include src tests
 
 SRC_DIR		:= src
 OBJ_DIR		:= obj
@@ -78,4 +81,41 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all test test_config_internal test_runtime_internal clean fclean re
+diff:
+	@mkdir -p "$$(dirname "$(DIFF_OUT)")"
+	@rm -f "$(DIFF_OUT)"
+	@{ \
+		git status --short; \
+		git diff --stat -- $(DIFF_FILES); \
+		git diff -- $(DIFF_FILES); \
+		git ls-files --others --exclude-standard $(DIFF_FILES) | while read file; do \
+			echo ""; \
+			echo "Untracked: $$file"; \
+			git diff --no-index /dev/null "$$file" || true; \
+		done; \
+	} | tee "$(DIFF_OUT)"
+	@echo ""
+	@printf "Copy diff output to clipboard? [y/N] "; \
+	read answer; \
+	if [ "$$answer" = "y" ] || [ "$$answer" = "Y" ] || [ "$$answer" = "yes" ] || [ "$$answer" = "YES" ]; then \
+		if command -v wl-copy >/dev/null 2>&1; then \
+			cat "$(DIFF_OUT)" | wl-copy; \
+			echo "Copied diff output to clipboard with wl-copy."; \
+		elif command -v xclip >/dev/null 2>&1; then \
+			cat "$(DIFF_OUT)" | xclip -selection clipboard; \
+			echo "Copied diff output to clipboard with xclip."; \
+		elif command -v xsel >/dev/null 2>&1; then \
+			cat "$(DIFF_OUT)" | xsel --clipboard --input; \
+			echo "Copied diff output to clipboard with xsel."; \
+		elif command -v pbcopy >/dev/null 2>&1; then \
+			cat "$(DIFF_OUT)" | pbcopy; \
+			echo "Copied diff output to clipboard with pbcopy."; \
+		else \
+			echo "Clipboard tool not found. Diff output saved at $(DIFF_OUT)."; \
+			echo "Install one of: wl-clipboard, xclip, xsel, or use macOS pbcopy."; \
+		fi; \
+	else \
+		echo "Diff output saved at $(DIFF_OUT)."; \
+	fi
+
+.PHONY: all test test_config_internal test_runtime_internal diff clean fclean re
