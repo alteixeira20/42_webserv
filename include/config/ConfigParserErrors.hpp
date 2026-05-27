@@ -19,6 +19,14 @@ namespace ConfigParserErrors
 		"expected '}' after server block";
 	static const char* const UNKNOWN_SERVER_DIRECTIVE =
 		"unknown server directive";
+	static const char* const EXPECTED_LISTEN_VALUE =
+		"expected listen value";
+	static const char* const EXPECTED_DIRECTIVE_SEMICOLON =
+		"expected ';' after directive";
+	static const char* const INVALID_LISTEN_VALUE =
+		"invalid listen value";
+	static const char* const INVALID_LISTEN_PORT =
+		"invalid listen port";
 }
 
 #endif

@@ -7,6 +7,7 @@
 #include "config/Config.hpp"
 #include "config/ConfigToken.hpp"
 #include "config/ServerConfig.hpp"
+#include "config/ListenConfig.hpp"
 
 /*
 ** ConfigParser turns tokenized configuration text into Config objects.
@@ -44,6 +45,11 @@ class ConfigParser
 		Config					parseConfig();
 		ServerConfig			parseServer();
 		void					parseServerDirective(ServerConfig &server);
+		void					parseListen(ServerConfig &server);
+		ListenConfig			parseListenValue(const ConfigToken &token) const;
+		unsigned int			parsePort(const std::string &value,
+									const ConfigToken &token) const;
+		bool					isOnlyDigits(const std::string &value) const;
 };
 
 #endif
