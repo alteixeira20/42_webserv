@@ -8,10 +8,6 @@ SRC_DIR		:= src
 OBJ_DIR		:= obj
 
 COMMON_SRCS	:= \
-	$(SRC_DIR)/ClientConnection.cpp \
-	$(SRC_DIR)/ClientManager.cpp \
-	$(SRC_DIR)/EventLoop.cpp \
-	$(SRC_DIR)/ListenerManager.cpp \
 	$(SRC_DIR)/config/Config.cpp \
 	$(SRC_DIR)/config/ConfigException.cpp \
 	$(SRC_DIR)/config/ConfigParser.cpp \
@@ -20,7 +16,11 @@ COMMON_SRCS	:= \
 	$(SRC_DIR)/config/ListenConfig.cpp \
 	$(SRC_DIR)/config/RouteConfig.cpp \
 	$(SRC_DIR)/config/ServerConfig.cpp \
-	$(SRC_DIR)/http/HttpMethod.cpp
+	$(SRC_DIR)/http/HttpMethod.cpp \
+	$(SRC_DIR)/runtime/ClientConnection.cpp \
+	$(SRC_DIR)/runtime/ClientManager.cpp \
+	$(SRC_DIR)/runtime/EventLoop.cpp \
+	$(SRC_DIR)/runtime/ListenerManager.cpp
 
 SRCS		:= \
 	$(SRC_DIR)/main.cpp \
@@ -28,7 +28,7 @@ SRCS		:= \
 
 OBJS		:= $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
-TEST_LISTENER		:= tests/runtime/test_listener_manager
+TEST_LISTENER	:= tests/runtime/test_listener_manager
 TEST_CLIENT		:= tests/runtime/test_client_connection
 TEST_CLIENT_MANAGER	:= tests/runtime/test_client_manager
 TEST_EVENT_LOOP	:= tests/runtime/test_event_loop

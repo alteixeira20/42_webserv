@@ -21,7 +21,7 @@ class ConfigTokenizer
         unsigned int    _line;
         unsigned int    _column;
 
-        bool            isAtEnd(void) const;
+        bool            isAtEnd() const;
         char            peek() const;
         char            advance();
         void            skipWhitespaceAndComments();
