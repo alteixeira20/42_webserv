@@ -49,6 +49,32 @@ namespace ConfigParserErrors
 		"expected '{' after location path";
 	static const char* const EXPECTED_LOCATION_CLOSE_BRACE =
 		"expected '}' after location block";
+	static const char* const UNKNOWN_ROUTE_DIRECTIVE =
+		"unknown route directive";
+	static const char* const EXPECTED_ROUTE_ROOT_VALUE =
+		"expected route root value";
+	static const char* const EXPECTED_ROUTE_INDEX_VALUE =
+		"expected route index value";
+	static const char* const EXPECTED_AUTOINDEX_VALUE =
+		"expected autoindex value";
+	static const char* const INVALID_BOOLEAN_VALUE =
+		"invalid boolean value";
+	static const char* const EXPECTED_ALLOWED_METHOD =
+		"expected allowed method";
+	static const char* const INVALID_ALLOWED_METHOD =
+		"invalid allowed method";
+	static const char* const EXPECTED_REDIRECT_STATUS =
+		"expected redirect status";
+	static const char* const EXPECTED_REDIRECT_TARGET =
+		"expected redirect target";
+	static const char* const INVALID_REDIRECT_STATUS =
+		"invalid redirect status";
+	static const char* const EXPECTED_UPLOAD_DIR =
+		"expected upload directory";
+	static const char* const EXPECTED_CGI_EXTENSION =
+		"expected CGI extension";
+	static const char* const EXPECTED_CGI_EXECUTABLE =
+		"expected CGI executable";
 }
 
 #endif

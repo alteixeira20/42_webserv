@@ -89,6 +89,21 @@ unsigned int	ConfigParser::parseStatusCode(const std::string &value,
 	return (static_cast<unsigned int>(status));
 }
 
+unsigned int	ConfigParser::parseRedirectStatus(const std::string &value,
+	const ConfigToken &token) const
+{
+	long	status;
+
+	if (!isOnlyDigits(value))
+		throw (ConfigException(ConfigParserErrors::INVALID_REDIRECT_STATUS,
+				token.getLine(), token.getColumn()));
+	status = std::strtol(value.c_str(), NULL, 10);
+	if (status < 300 || status > 399)
+		throw (ConfigException(ConfigParserErrors::INVALID_REDIRECT_STATUS,
+				token.getLine(), token.getColumn()));
+	return (static_cast<unsigned int>(status));
+}
+
 bool	ConfigParser::isOnlyDigits(const std::string &value) const
 {
 	std::string::size_type	index;
@@ -106,4 +121,26 @@ bool	ConfigParser::isOnlyDigits(const std::string &value) const
 	}
 
 	return (true);
+}
+
+bool	ConfigParser::parseBoolean(const std::string &value,
+	const ConfigToken &token) const
+{
+	if (value == "on" || value == "true" || value == "1")
+		return (true);
+	if (value == "off" || value == "false" || value == "0")
+		return (false);
+	throw (ConfigException(ConfigParserErrors::INVALID_BOOLEAN_VALUE,
+			token.getLine(), token.getColumn()));
+}
+
+HttpMethod	ConfigParser::parseAllowedMethod(const ConfigToken &token) const
+{
+	HttpMethod	method;
+
+	method = parseHttpMethod(token.getValue());
+	if (!isSupportedHttpMethod(method))
+		throw (ConfigException(ConfigParserErrors::INVALID_ALLOWED_METHOD,
+				token.getLine(), token.getColumn()));
+	return (method);
 }

@@ -6,8 +6,10 @@
 #include <vector>
 #include "config/Config.hpp"
 #include "config/ConfigToken.hpp"
-#include "config/ServerConfig.hpp"
 #include "config/ListenConfig.hpp"
+#include "config/RouteConfig.hpp"
+#include "config/ServerConfig.hpp"
+#include "http/HttpMethod.hpp"
 
 /*
 ** ConfigParser turns tokenized configuration text into Config objects.
@@ -74,6 +76,11 @@ class ConfigParser
 		unsigned int			parseStatusCode(const std::string &value,
 									const ConfigToken &token) const;
 		bool					isOnlyDigits(const std::string &value) const;
+		bool					parseBoolean(const std::string &value,
+									const ConfigToken &token) const;
+		HttpMethod				parseAllowedMethod(const ConfigToken &token) const;
+		unsigned int			parseRedirectStatus(const std::string &value,
+									const ConfigToken &token) const;
 
 		/*
 		** Route grammar.
@@ -81,6 +88,14 @@ class ConfigParser
 		*/
 		void					parseLocation(ServerConfig &server);
 		RouteConfig				parseRoute();
+		void					parseRouteDirective(RouteConfig &route);
+		void					parseRouteRoot(RouteConfig &route);
+		void					parseRouteIndex(RouteConfig &route);
+		void					parseAutoIndex(RouteConfig &route);
+		void					parseAllowedMethods(RouteConfig &route);
+		void					parseRedirect(RouteConfig &route);
+		void					parseUploadDir(RouteConfig &route);
+		void					parseCgi(RouteConfig &route);
 };
 
 #endif

@@ -64,6 +64,8 @@ void	ConfigParser::parseServerDirective(ServerConfig &server)
 		parseClientMaxBodySize(server);
 	else if (token.getValue() == "error_page")
 		parseErrorPage(server);
+	else if (token.getValue() == "location")
+		parseLocation(server);
 	else
 		throw (ConfigException(ConfigParserErrors::UNKNOWN_SERVER_DIRECTIVE,
 			token.getLine(), token.getColumn()));
