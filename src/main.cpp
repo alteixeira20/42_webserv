@@ -1,6 +1,7 @@
 #include "ListenerConfig.hpp"
-#include "ListenerManager.hpp"
+#include "ServerRuntime.hpp"
 
+#include <ctime>
 #include <exception>
 #include <iostream>
 #include <string>
@@ -21,12 +22,17 @@ int	main(int argc, char **argv)
 	std::cout << "webserv starting with config: " << config << std::endl;
 	try
 	{
-		ListenerManager listeners;
 		std::vector<ListenerConfig> endpoints = temporary_listener_configs();
+		ServerRuntime runtime;
 
-		listeners.openAll(endpoints);
-		std::cout << "listening on " << listeners.listeners().size()
+		runtime.start(endpoints);
+		std::cout << "listening on " << runtime.listenerCount()
 			<< " endpoint(s)" << std::endl;
+		while (true)
+		{
+			runtime.runCycle(1000);
+			runtime.cleanup(std::time(NULL), 30);
+		}
 	}
 	catch (const std::exception &error)
 	{

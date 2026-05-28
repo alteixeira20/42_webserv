@@ -100,5 +100,5 @@ bool	ClientConnection::wantsRead(void) const
 
 bool	ClientConnection::wantsWrite(void) const
 {
-	return (_state == WRITING_RESPONSE && !_writeBuffer.empty());
+	return (_state != CLOSING && !_writeBuffer.empty());
 }

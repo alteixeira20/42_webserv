@@ -1,12 +1,12 @@
 {
   "schema": "roadforge.roadmap.export",
   "version": 1,
-  "exportedAt": "2026-05-26T15:06:14.736Z",
+  "exportedAt": "2026-05-28T16:52:27.613Z",
   "roadmap": {
     "name": "webserv (42) — paalexan + jopedro- parallel roadmap",
-    "saved": false,
+    "saved": true,
     "id": "rm_KyYOeH6P0_2siw8fzfchPQ",
-    "updatedAt": "2026-05-26T14:42:50.464607Z"
+    "updatedAt": "2026-05-28T16:46:59.163699Z"
   },
   "collaborator": {
     "role": "owner",
@@ -15,22 +15,23 @@
   "phases": [
     {
       "id": "phase-01",
-      "num": "00",
+      "num": "01",
       "name": "Kickoff, subject checklist, and repo baseline",
       "color": "#f5853f",
-      "status": "active",
+      "status": "done",
       "progress": 100,
       "tasks": [
         {
           "id": "WS-101",
           "title": "Read subject and build the acceptance checklist",
           "done": true,
-          "next": true,
+          "next": false,
           "tags": [
             "planning",
             "risk",
             "mandatory",
-            "subject"
+            "subject",
+            "done"
           ],
           "assignees": [
             "Alexandre",
@@ -47,7 +48,8 @@
           "next": false,
           "tags": [
             "planning",
-            "team"
+            "team",
+            "done"
           ],
           "assignees": [
             "Farreca",
@@ -67,7 +69,8 @@
           "tags": [
             "setup",
             "makefile",
-            "done-baseline"
+            "done-baseline",
+            "done"
           ],
           "assignees": [
             "Alexandre",
@@ -88,7 +91,8 @@
             "planning",
             "team",
             "pair",
-            "comparison"
+            "comparison",
+            "done"
           ],
           "assignees": [
             "Alexandre",
@@ -109,7 +113,8 @@
           "tags": [
             "testing",
             "nginx",
-            "team"
+            "team",
+            "done"
           ],
           "assignees": [
             "Alexandre",
@@ -129,7 +134,8 @@
           "tags": [
             "config",
             "testing",
-            "config-fixtures"
+            "config-fixtures",
+            "done"
           ],
           "assignees": [
             "Alexandre"
@@ -144,22 +150,24 @@
     },
     {
       "id": "phase-02",
-      "num": "01",
+      "num": "02",
       "name": "Configuration parser and runtime model",
       "color": "#5e60ce",
-      "status": "active",
-      "progress": 0,
+      "status": "done",
+      "progress": 100,
       "tasks": [
         {
           "id": "WS-201",
           "title": "Define config grammar and supported directives",
-          "done": false,
-          "next": true,
+          "done": true,
+          "next": false,
           "tags": [
             "config",
             "planning",
             "owner-track:parsing",
-            "next"
+            "next",
+            "done",
+            "completed:on-main"
           ],
           "assignees": [
             "Alexandre",
@@ -175,12 +183,14 @@
         {
           "id": "WS-202",
           "title": "Implement config tokenizer with line/column errors",
-          "done": false,
-          "next": true,
+          "done": true,
+          "next": false,
           "tags": [
             "config",
             "parsing",
-            "owner-track:parsing"
+            "owner-track:parsing",
+            "done",
+            "completed:on-main"
           ],
           "assignees": [
             "Alexandre"
@@ -195,12 +205,17 @@
         {
           "id": "WS-203",
           "title": "Implement parser to ServerConfig and RouteConfig objects",
-          "done": false,
+          "done": true,
           "next": false,
           "tags": [
             "config",
             "parsing",
-            "owner-track:parsing"
+            "owner-track:parsing",
+            "done",
+            "semantic-parser",
+            "server-directives",
+            "route-directives",
+            "completed:on-main"
           ],
           "assignees": [
             "Alexandre"
@@ -209,17 +224,21 @@
             "WS-202"
           ],
           "est": "1.5 days",
-          "desc": "Lead: Alexandre. Reviewer: Farreca. Parse tokens into typed config objects. Reject duplicate/invalid directives, invalid methods, missing roots, invalid upload directories, and malformed redirects."
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Parse tokens into typed Config, ServerConfig, ListenConfig, and RouteConfig objects. Completed on feature/config-parser after the route-directives slice: parser core/navigation; centralized parser errors; server blocks; listen host:port and bare ports; server_name; root; index; client_max_body_size; multi-status error_page; location blocks; route root/index/autoindex; allowed_methods; 3xx-only redirects; upload_dir; and CGI extension mapping. Parser implementation is split into core/server/route/value files. Remaining semantic checks are tracked in WS-204."
         },
         {
           "id": "WS-204",
           "title": "Implement config validation and defaults",
-          "done": false,
+          "done": true,
           "next": false,
           "tags": [
             "config",
             "validation",
-            "owner-track:parsing"
+            "owner-track:parsing",
+            "defaults",
+            "semantic-checks",
+            "done",
+            "completed:on-main"
           ],
           "assignees": [
             "Alexandre"
@@ -228,18 +247,20 @@
             "WS-203"
           ],
           "est": "1 day",
-          "desc": "Lead: Alexandre. Reviewer: Farreca. Apply defaults and validate final config. Ensure error pages, max body size, route roots, methods, CGI paths, and listen endpoints are usable before the server starts."
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Completed on main: ConfigValidator runs after parsing and rejects empty configs, servers without listen directives, duplicate listens inside one server, duplicate default servers on the same listen endpoint, duplicate server_name values on the same listen endpoint, duplicate route paths, and location paths that do not start with '/'. Defaults currently live in config model constructors, including index.html and client_max_body_size 1000000. Filesystem existence, route inheritance, and HTTP behavior remain later-layer responsibilities."
         },
         {
           "id": "WS-205",
           "title": "Implement route resolution by host, port, and longest path prefix",
-          "done": false,
+          "done": true,
           "next": false,
           "tags": [
             "routing",
             "config",
             "owner-track:parsing",
-            "contract"
+            "contract",
+            "done",
+            "completed:on-main"
           ],
           "assignees": [
             "Alexandre"
@@ -248,37 +269,43 @@
             "WS-204"
           ],
           "est": "1 day",
-          "desc": "Lead: Alexandre. Reviewer: Farreca. Return the effective server and route config for a listener/Host/path. No regex. Longest matching route prefix wins."
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Completed on main: ConfigResolver selects the effective ServerConfig by listen endpoint plus Host/server_name, falls back to the first server on an endpoint when Host does not match, and selects RouteConfig by longest path prefix with segment-boundary checks."
         },
         {
           "id": "WS-206",
           "title": "Config unit tests and parser fixtures",
-          "done": false,
+          "done": true,
           "next": false,
           "tags": [
             "tests",
             "config",
-            "owner-track:parsing"
+            "owner-track:parsing",
+            "done",
+            "completed:on-main"
           ],
           "assignees": [
             "Alexandre"
           ],
           "deps": [
-            "WS-205"
+            "WS-204",
+            "WS-210"
           ],
           "est": "1 day",
-          "desc": "Lead: Alexandre. Reviewer: Farreca. Create fixtures for valid/invalid configs and expected parsed models. Include duplicate directives, bad methods, bad braces, missing semicolon, and route precedence cases."
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Completed on main: tests/config/test_config_foundation.cpp and fixtures cover tokenizer/model behavior, semantic parser output, valid/invalid listen values, server directives, multi-status error_page, location blocks, route directives, validator failures, and ConfigResolver behavior."
         },
         {
           "id": "WS-207",
           "title": "Define shared stub config interface for Farreca's runtime track",
-          "done": false,
-          "next": true,
+          "done": true,
+          "next": false,
           "tags": [
             "config",
             "contract",
             "parallel",
-            "owner-track:parsing"
+            "owner-track:parsing",
+            "done",
+            "completed:on-main",
+            "runtime-contract"
           ],
           "assignees": [
             "Alexandre",
@@ -289,12 +316,124 @@
           ],
           "est": "0.5 day",
           "desc": "Lead: Alexandre. Reviewer: Farreca. Provide a small stable interface or fixture returning listener endpoints and route basics so Farreca can build sockets/event-loop without waiting for the full parser."
+        },
+        {
+          "id": "WS-208",
+          "title": "Add developer validation tooling and organized foundation tests",
+          "done": true,
+          "next": false,
+          "tags": [
+            "tooling",
+            "tests",
+            "makefile",
+            "done",
+            "completed:on-main",
+            "developer-experience"
+          ],
+          "assignees": [
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-103",
+            "WS-207"
+          ],
+          "est": "0.5 day",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Completed: make test opens the Python runner menu; runtime tests are organized under tests/runtime; generated test binaries are ignored; make diff prints/copies a full Git diff report; make lint checks whitespace, final newlines, excessive blank lines, tracked generated binaries, and conflict markers."
+        },
+        {
+          "id": "WS-209",
+          "title": "Remove temporary fallback endpoint after semantic config parsing",
+          "done": true,
+          "next": false,
+          "tags": [
+            "config",
+            "runtime-contract",
+            "cleanup",
+            "owner-track:parsing",
+            "done",
+            "completed:on-main"
+          ],
+          "assignees": [
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-203",
+            "WS-204"
+          ],
+          "est": "0.5 day",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Completed on main: the temporary 0.0.0.0:8080 parser-foundation fallback was removed from src/main.cpp. Startup now relies on parsed listen endpoints and ConfigValidator; empty or invalid config fails with ConfigException."
+        },
+        {
+          "id": "WS-210",
+          "title": "Config parser smoke tests for real listen/server blocks",
+          "done": true,
+          "next": false,
+          "tags": [
+            "tests",
+            "config",
+            "parsing",
+            "owner-track:parsing",
+            "done",
+            "completed:on-main"
+          ],
+          "assignees": [
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-203"
+          ],
+          "est": "0.5 day",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Completed on main: parser smoke and semantic tests prove parseFile/parseString return real Config, ServerConfig, ListenConfig, and RouteConfig objects from valid minimal/comment/full configs."
+        },
+        {
+          "id": "WS-211",
+          "title": "Document config parser implementation and update parser docs",
+          "done": true,
+          "next": false,
+          "tags": [
+            "docs",
+            "config",
+            "parsing",
+            "owner-track:parsing",
+            "done",
+            "completed:on-main"
+          ],
+          "assignees": [
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-204",
+            "WS-206"
+          ],
+          "est": "0.5 day",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Completed on main: docs/config_grammar.md, docs/parsing_foundation.md, docs/runtime_foundation.md, tests/config/README.md, and tests/runtime/README.md document the parser/validator/resolver split, supported directives, validation rules, resolver behavior, current limitations, runtime fallback removal, and active tests."
+        },
+        {
+          "id": "WS-212",
+          "title": "Maintain default config and webroot fixture pack",
+          "done": true,
+          "next": false,
+          "tags": [
+            "config",
+            "fixtures",
+            "docs",
+            "done",
+            "completed:on-main"
+          ],
+          "assignees": [
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-204"
+          ],
+          "est": "0.5 day",
+          "desc": "Track configs/default.conf, www/index.html, and www/errors/* as maintained startup/demo fixtures. Completed on main: default config parses successfully, webserv starts from it, and config docs/tests reference the active grammar."
         }
       ]
     },
     {
       "id": "phase-03",
-      "num": "02",
+      "num": "03",
       "name": "Sockets and one-poll event loop",
       "color": "#2a9d8f",
       "status": "active",
@@ -309,7 +448,10 @@
             "network",
             "socket",
             "owner-track:runtime",
-            "parallel"
+            "parallel",
+            "done",
+            "completed:on-main",
+            "listener-foundation"
           ],
           "assignees": [
             "Farreca",
@@ -321,7 +463,7 @@
             "WS-201"
           ],
           "est": "1 day",
-          "desc": "Lead: Farreca. Reviewer: Alexandre. Create, bind, listen, set SO_REUSEADDR where appropriate, set non-blocking mode, and register each listener in the event loop. Use the parsed config contract once WS-205 is ready; until then use a small temporary ListenerConfig stub."
+          "desc": "Lead: Farreca. Reviewer: Alexandre. Create, bind, listen, set SO_REUSEADDR where appropriate, set non-blocking mode, and register each listener in the event loop. Use the parsed config contract once WS-205 is ready; until then use a small temporary ListenerConfig stub. Progress update: Completed as runtime foundation: ListenerManager opens one socket per ListenConfig from Config::getUniqueListens(), resolves host/port, sets SO_REUSEADDR, binds/listens, sets non-blocking mode, and cleans up listener fds."
         },
         {
           "id": "WS-302",
@@ -331,7 +473,10 @@
           "tags": [
             "network",
             "design",
-            "owner-track:runtime"
+            "owner-track:runtime",
+            "done",
+            "completed:on-main",
+            "runtime-foundation"
           ],
           "assignees": [
             "Farreca"
@@ -340,11 +485,11 @@
             "WS-301"
           ],
           "est": "0.5 day",
-          "desc": "Lead: Farreca. Reviewer: Alexandre. Define states: READING_HEADERS, READING_BODY, PROCESSING, CGI_RUNNING, WRITING_RESPONSE, CLOSING. Include buffers, timestamps, request/response ownership, and close reasons."
+          "desc": "Lead: Farreca. Reviewer: Alexandre. Define states: READING_HEADERS, READING_BODY, PROCESSING, CGI_RUNNING, WRITING_RESPONSE, CLOSING. Include buffers, timestamps, request/response ownership, and close reasons. Progress update: Completed as runtime foundation: ClientConnection and ClientManager scaffolding exist with connection state, buffers/interest hooks, accept-from-ready-listener flow, and non-blocking accepted sockets."
         },
         {
           "id": "WS-303",
-          "title": "Implement single poll/equivalent event loop",
+          "title": "Complete persistent single poll/equivalent event loop",
           "done": true,
           "next": false,
           "tags": [
@@ -352,7 +497,10 @@
             "io",
             "risk",
             "owner-track:runtime",
-            "grade-risk"
+            "grade-risk",
+            "next",
+            "current-focus",
+            "partial"
           ],
           "assignees": [
             "Farreca"
@@ -361,16 +509,17 @@
             "WS-302"
           ],
           "est": "2 days",
-          "desc": "Lead: Farreca. Reviewer: Alexandre. Use one poll/equivalent call to handle listener sockets, client sockets, and later CGI pipes. poll must monitor reading and writing simultaneously. Never read/write an FD unless the poll result says it is ready. Do not use errno after read/write to decide server behavior."
+          "desc": "Lead: Farreca. Reviewer: Alexandre. Completed as runtime foundation: RuntimeLoop repeatedly calls EventLoop::pollOnce(), dispatches listener accept events, performs one guarded ClientIo read/write pass per ready client per poll cycle, and runs closing-client cleanup. Production main wiring remains tracked by WS-309."
         },
         {
           "id": "WS-304",
           "title": "Accept clients and register non-blocking connections",
-          "done": true,
+          "done": false,
           "next": false,
           "tags": [
             "network",
-            "owner-track:runtime"
+            "owner-track:runtime",
+            "partial"
           ],
           "assignees": [
             "Farreca"
@@ -379,17 +528,19 @@
             "WS-303"
           ],
           "est": "1 day",
-          "desc": "Lead: Farreca. Reviewer: Alexandre. Accept all pending clients from ready listener sockets, set them non-blocking, create ClientConnection state, and add them to the poll set."
+          "desc": "Lead: Farreca. Reviewer: Alexandre. Partial foundation exists: ClientManager can accept pending clients from a ready listener, set non-blocking mode, store/register them, and tests cover acceptance behavior. Still missing: production continuous accept loop integration in main."
         },
         {
           "id": "WS-305",
           "title": "Implement read/write buffer mechanics",
-          "done": true,
+          "done": false,
           "next": false,
           "tags": [
             "network",
             "io",
-            "owner-track:runtime"
+            "owner-track:runtime",
+            "partial",
+            "client-io"
           ],
           "assignees": [
             "Farreca"
@@ -398,18 +549,20 @@
             "WS-303"
           ],
           "est": "1 day",
-          "desc": "Lead: Farreca. Reviewer: Alexandre. Support partial reads and partial writes without blocking. Preserve unread bytes and unsent response bytes correctly."
+          "desc": "Lead: Farreca. Reviewer: Alexandre. Partial foundation exists: ClientIo provides guarded read/write helpers with buffer behavior and error/EOF handling tests. Still missing: production wiring to real HTTP parsing/response generation."
         },
         {
           "id": "WS-306",
           "title": "Timeouts, cleanup, and FD-leak protection",
-          "done": true,
+          "done": false,
           "next": false,
           "tags": [
             "network",
             "risk",
             "owner-track:runtime",
-            "grade-risk"
+            "grade-risk",
+            "partial",
+            "cleanup"
           ],
           "assignees": [
             "Farreca"
@@ -419,7 +572,7 @@
             "WS-305"
           ],
           "est": "1 day",
-          "desc": "Lead: Farreca. Reviewer: Alexandre. Close idle/stuck clients predictably so requests never hang indefinitely. Ensure disconnects, bad requests, write errors, and timeouts do not leak FDs or crash the server."
+          "desc": "Lead: Farreca. Reviewer: Alexandre. Partial foundation exists: ClientConnection::isTimedOut and ClientManager cleanup helpers close timed-out/closing clients and close all clients with EventLoop unregister coverage. Still missing: production loop exercising timeouts/cleanup under real runtime load."
         },
         {
           "id": "WS-307",
@@ -430,7 +583,11 @@
             "network",
             "integration",
             "parallel",
-            "owner-track:runtime"
+            "owner-track:runtime",
+            "done",
+            "completed:on-main",
+            "runtime-foundation",
+            "dummy-response"
           ],
           "assignees": [
             "Farreca"
@@ -440,13 +597,148 @@
             "WS-207"
           ],
           "est": "0.5 day",
-          "desc": "Lead: Farreca. Reviewer: Alexandre. Before full HTTP is ready, accept a connection and return a fixed valid HTTP response through the same write buffer path. This proves listener/client lifecycle independently from parsing."
+          "desc": "Lead: Farreca. Reviewer: Alexandre. Completed as a tested runtime foundation module: DummyResponseRuntime produces a fixed valid HTTP response through existing client buffers and runtime helpers. It is not wired into production main; WS-313 tracks whether to wire it temporarily or retire it once real HTTP runtime exists."
+        },
+        {
+          "id": "WS-308",
+          "title": "Document runtime foundation architecture",
+          "done": true,
+          "next": false,
+          "tags": [
+            "docs",
+            "runtime",
+            "completed:on-main"
+          ],
+          "assignees": [
+            "Alexandre",
+            "Farreca"
+          ],
+          "deps": [
+            "WS-301",
+            "WS-302"
+          ],
+          "est": "0.5 day",
+          "desc": "Documented runtime foundation: ListenerManager, EventLoop, ClientConnection, ClientManager, relationship to Config::getUniqueListens(), current limitations, and evaluation-critical I/O rules still pending."
+        },
+        {
+          "id": "WS-309",
+          "title": "Wire persistent runtime loop in main",
+          "done": true,
+          "next": false,
+          "tags": [
+            "runtime",
+            "event-loop",
+            "grade-risk",
+            "current-focus",
+            "next"
+          ],
+          "assignees": [
+            "Farreca"
+          ],
+          "deps": [
+            "WS-301",
+            "WS-302",
+            "WS-303"
+          ],
+          "est": "1 day",
+          "desc": "Lead: Farreca. Reviewer: Alexandre. Completed: main now creates ServerRuntime, starts listener sockets, registers them in EventLoop, and stays in a persistent poll-driven RuntimeLoop with cleanup sweeps. It does not wire DummyResponseRuntime into production behavior."
+        },
+        {
+          "id": "WS-310",
+          "title": "Add runtime scaffold tests to normal validation flow",
+          "done": true,
+          "next": false,
+          "tags": [
+            "tests",
+            "runtime",
+            "makefile",
+            "done",
+            "completed:on-main",
+            "test-runner"
+          ],
+          "assignees": [
+            "Farreca"
+          ],
+          "deps": [
+            "WS-301",
+            "WS-302",
+            "WS-303"
+          ],
+          "est": "0.5 day",
+          "desc": "Lead: Farreca. Reviewer: Alexandre. Completed: runtime tests are organized under tests/runtime and run through make test_runtime_internal plus tests/run.py. Active coverage includes ListenerManager, EventLoop, ClientConnection, ClientManager, ClientIo, cleanup, and DummyResponseRuntime. HTTP/CGI/stress remain planned until those systems exist."
+        },
+        {
+          "id": "WS-311",
+          "title": "Guarded ClientIo module and tests",
+          "done": true,
+          "next": false,
+          "tags": [
+            "runtime",
+            "io",
+            "tests",
+            "done",
+            "completed:on-main",
+            "client-io"
+          ],
+          "assignees": [
+            "Farreca"
+          ],
+          "deps": [
+            "WS-303",
+            "WS-305"
+          ],
+          "est": "0.5 day",
+          "desc": "Completed on main: ClientIo centralizes guarded read/write helper behavior, buffer updates, EOF/error handling, and tests for would-block/read-error/write-error cases."
+        },
+        {
+          "id": "WS-312",
+          "title": "Client cleanup lifecycle tests",
+          "done": true,
+          "next": false,
+          "tags": [
+            "runtime",
+            "cleanup",
+            "tests",
+            "done",
+            "completed:on-main"
+          ],
+          "assignees": [
+            "Farreca"
+          ],
+          "deps": [
+            "WS-304",
+            "WS-306"
+          ],
+          "est": "0.5 day",
+          "desc": "Completed on main: runtime cleanup tests cover timed-out clients, closing clients, EventLoop unregister behavior, and closeAll(EventLoop&) behavior."
+        },
+        {
+          "id": "WS-313",
+          "title": "Decide dummy runtime lifecycle",
+          "done": true,
+          "next": false,
+          "tags": [
+            "runtime",
+            "cleanup",
+            "integration",
+            "decision"
+          ],
+          "assignees": [
+            "Farreca",
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-307",
+            "WS-309"
+          ],
+          "est": "0.5 day",
+          "desc": "Completed: DummyResponseRuntime is kept as an explicit test/demo fixture only. It is no longer part of COMMON_SRCS or the production webserv link; tests that need it link DummyResponseRuntime.cpp directly. Production main uses ServerRuntime and RuntimeLoop without hidden dummy response behavior."
         }
       ]
     },
     {
       "id": "phase-04",
-      "num": "03",
+      "num": "04",
       "name": "HTTP parser, routing, and static responses",
       "color": "#4361ee",
       "status": "future",
@@ -622,7 +914,7 @@
     },
     {
       "id": "phase-05",
-      "num": "04",
+      "num": "05",
       "name": "Uploads, DELETE, and CGI",
       "color": "#ff006e",
       "status": "future",
@@ -777,11 +1069,11 @@
     },
     {
       "id": "phase-06",
-      "num": "05",
+      "num": "06",
       "name": "Testing, stress, docs, and evaluation readiness",
       "color": "#8338ec",
       "status": "future",
-      "progress": 0,
+      "progress": 13,
       "tasks": [
         {
           "id": "WS-601",
@@ -808,24 +1100,25 @@
         },
         {
           "id": "WS-602",
-          "title": "Parser and config unit tests",
+          "title": "HTTP parser and body unit tests",
           "done": false,
           "next": false,
           "tags": [
             "testing",
             "unit",
-            "owner-track:parsing"
+            "owner-track:parsing",
+            "http",
+            "body"
           ],
           "assignees": [
             "Alexandre"
           ],
           "deps": [
-            "WS-206",
             "WS-401",
             "WS-402"
           ],
           "est": "1 day",
-          "desc": "Lead: Alexandre. Reviewer: Farreca. Add lightweight unit tests for config parsing, route matching, HTTP parser edge cases, chunked decoding, and body-size enforcement."
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Config parser tests are complete under WS-206. This task now tracks future HTTP parser/body unit tests: request-line parsing, header parsing, malformed input, oversized headers, Content-Length, chunked decoding, and body-size enforcement."
         },
         {
           "id": "WS-603",
@@ -934,15 +1227,36 @@
           ],
           "est": "1 day",
           "desc": "Lead: Pair. Reviewer: Pair. Final pair pass. Run leak checks, crash checks, warning checks, clean rebuild, remove debug prints, review forbidden functions, and prepare defense explanation."
+        },
+        {
+          "id": "WS-608",
+          "title": "Archive completed feature branches and keep Git history clean",
+          "done": true,
+          "next": false,
+          "tags": [
+            "git",
+            "cleanup",
+            "workflow",
+            "done",
+            "completed:on-main"
+          ],
+          "assignees": [
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-208"
+          ],
+          "est": "0.25 day",
+          "desc": "Completed: finished branches were archived with archive/* tags before deletion. Remote feature branches were pruned so origin/main is the only active remote branch, while archive tags preserve branch tips for traceability."
         }
       ]
     },
     {
       "id": "phase-07",
-      "num": "06",
+      "num": "07",
       "name": "Parallel work plan and checkpoints",
       "color": "#38bdf8",
-      "status": "future",
+      "status": "active",
       "progress": 0,
       "tasks": [
         {
@@ -952,7 +1266,8 @@
           "next": false,
           "tags": [
             "checkpoint",
-            "pair"
+            "pair",
+            "partial"
           ],
           "assignees": [
             "Alexandre",
@@ -963,7 +1278,7 @@
             "WS-303"
           ],
           "est": "0.5 day",
-          "desc": "Lead: Pair. Reviewer: Pair. Both branches integrate. A config file can create listener sockets and the server can accept connections without serving full HTTP yet."
+          "desc": "Lead: Pair. Reviewer: Pair. Partial checkpoint: config parser/validator/resolver, valid default config, listener foundation, ClientIo, cleanup helpers, dummy response runtime, docs, lint, and tests all compile together on main. Remaining blocker before marking done: production persistent event loop that accepts clients continuously."
         },
         {
           "id": "WS-702",
