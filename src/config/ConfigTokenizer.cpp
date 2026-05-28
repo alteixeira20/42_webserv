@@ -17,7 +17,7 @@ ConfigTokenizer::ConfigTokenizer(const ConfigTokenizer &other)
 }
 
 ConfigTokenizer&    ConfigTokenizer::operator=(const ConfigTokenizer &other)
-{   
+{
     if (this != &other)
     {
         _content = other._content;
@@ -29,7 +29,7 @@ ConfigTokenizer&    ConfigTokenizer::operator=(const ConfigTokenizer &other)
 }
 
 ConfigTokenizer::~ConfigTokenizer()
-{    
+{
 }
 
 std::vector<ConfigToken>    ConfigTokenizer::tokenize(

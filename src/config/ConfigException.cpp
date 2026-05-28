@@ -31,7 +31,7 @@ ConfigException&    ConfigException::operator=(const ConfigException &other)
 		_line = other._line;
 		_column = other._column;
 	}
-	return (*this); 
+	return (*this);
 }
 
 ConfigException::~ConfigException() throw()
@@ -50,5 +50,5 @@ unsigned int    ConfigException::getLine() const
 
 unsigned int    ConfigException::getColumn() const
 {
-    return (_column);    
+    return (_column);
 }

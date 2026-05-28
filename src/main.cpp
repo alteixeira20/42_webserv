@@ -1,39 +1,27 @@
 #include "config/Config.hpp"
 #include "config/ConfigParser.hpp"
 #include "config/ListenConfig.hpp"
-#include "config/ServerConfig.hpp"
-#include "ListenerManager.hpp"
+#include "runtime/ListenerManager.hpp"
 
 #include <exception>
 #include <iostream>
 #include <string>
 #include <vector>
 
-static void	add_parser_foundation_default(Config &config)
-{
-	ServerConfig server;
-
-	server.addListen(ListenConfig("0.0.0.0", 8080));
-	config.addServer(server);
-}
-
 int	main(int argc, char **argv)
 {
-	std::string config = (argc > 1) ? argv[1] : "configs/default.conf";
+	std::string	configPath = (argc > 1) ? argv[1] : "configs/default.conf";
 
-	std::cout << "webserv starting with config: " << config << std::endl;
+	std::cout << "webserv starting with config: " << configPath << std::endl;
 	try
 	{
-		ConfigParser parser;
-		Config configData = parser.parseFile(config);
-		ListenerManager listeners;
-		std::vector<ListenConfig> endpoints = configData.getUniqueListens();
+		ConfigParser				parser;
+		Config						configData;
+		ListenerManager				listeners;
+		std::vector<ListenConfig>	endpoints;
 
-		if (endpoints.empty())
-		{
-			add_parser_foundation_default(configData);
-			endpoints = configData.getUniqueListens();
-		}
+		configData = parser.parseFile(configPath);
+		endpoints = configData.getUniqueListens();
 		listeners.openAll(endpoints);
 		std::cout << "listening on " << listeners.listeners().size()
 			<< " endpoint(s)" << std::endl;

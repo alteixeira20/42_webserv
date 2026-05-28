@@ -51,19 +51,14 @@ Important invariants:
 - Runtime must not parse config strings directly.
 - Runtime receives endpoint objects, not raw parser tokens or directive text.
 
-Status: Temporary
+Status: Implemented
 
-`src/main.cpp` contains a fallback endpoint because `ConfigParser` currently
-returns an empty `Config`. The fallback injects `0.0.0.0:8080` so listener
-startup can be exercised before semantic config parsing exists.
+`src/main.cpp` now relies on semantic config parsing. `ConfigParser` populates
+`ServerConfig` and `ListenConfig` from real `listen` directives, and
+`Config::getUniqueListens()` supplies the listener endpoints. The previous
+`0.0.0.0:8080` temporary fallback was removed.
 
-Planned replacement:
-
-- Semantic config parsing must populate `ServerConfig` and `ListenConfig` from
-  real `listen` directives.
-- The fallback must be removed.
-- Empty or invalid config should become a startup `ConfigException`, not a
-  runtime fallback.
+Empty or invalid config is a startup `ConfigException`, not a runtime fallback.
 
 ## ListenerManager
 
@@ -184,8 +179,8 @@ Status: Temporary
 - There is no response write path.
 - There is no CGI pipe execution.
 - There is no per-client I/O error or disconnect cleanup.
-- The `0.0.0.0:8080` fallback endpoint exists only until semantic config
-  parsing populates real listen endpoints.
+- Runtime currently depends on parsed listen endpoints; there is no temporary
+  fallback endpoint.
 
 ## Evaluation-Critical Constraints Still Pending
 

@@ -78,16 +78,6 @@ const std::vector<RouteConfig>&	ServerConfig::getRoutes() const
 
 void    ServerConfig::addListen(const ListenConfig &listen)
 {
-    std::vector<ListenConfig>::const_iterator   it;
-
-    it = _listens.begin();
-
-    while (it != _listens.end())
-    {
-        if (it->equals(listen))
-            return ;
-        ++it;
-    }
     _listens.push_back(listen);
 }
 
