@@ -137,6 +137,73 @@ static void	test_io_ignores_events_without_matching_readiness()
 	assert_true(connection.writeBuffer() == "WAIT", "expected write buffer unchanged");
 }
 
+static void	test_read_would_block_keeps_connection_open()
+{
+	int					fds[2];
+	ClientIo			io(4);
+	ClientConnection	connection(-1, 10);
+
+	if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) != 0)
+		throw std::runtime_error("socketpair failed");
+	set_non_blocking(fds[0]);
+	connection = ClientConnection(fds[0], 10);
+
+	ClientIoResult result = io.handleReadable(client_event(connection, true, false));
+
+	close_pair(fds);
+	assert_true(result.bytes == 0, "expected would-block read to report zero bytes");
+	assert_true(!result.peerClosed, "expected would-block read not to report EOF");
+	assert_true(connection.state() == ClientConnection::READING_HEADERS,
+		"expected would-block read to keep connection open");
+	assert_true(connection.closeReason().empty(),
+		"expected would-block read not to record close reason");
+}
+
+static void	test_read_error_moves_connection_to_closing()
+{
+	int					fds[2];
+	ClientIo			io(4);
+	ClientConnection	connection(-1, 10);
+
+	if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) != 0)
+		throw std::runtime_error("socketpair failed");
+	connection = ClientConnection(fds[0], 10);
+	close(fds[0]);
+
+	ClientIoResult result = io.handleReadable(client_event(connection, true, false));
+
+	close(fds[1]);
+	assert_true(result.bytes == 0, "expected read error to report zero bytes");
+	assert_true(!result.peerClosed, "expected read error not to report EOF");
+	assert_true(connection.state() == ClientConnection::CLOSING,
+		"expected read error to close the connection");
+	assert_true(connection.closeReason() == "client read error",
+		"expected read error close reason");
+}
+
+static void	test_write_error_moves_connection_to_closing()
+{
+	int					fds[2];
+	ClientIo			io(4);
+	ClientConnection	connection(-1, 10);
+
+	if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) != 0)
+		throw std::runtime_error("socketpair failed");
+	connection = ClientConnection(fds[0], 10);
+	connection.appendWriteData("body");
+	connection.setState(ClientConnection::WRITING_RESPONSE);
+	close(fds[0]);
+
+	ClientIoResult result = io.handleWritable(client_event(connection, false, true));
+
+	close(fds[1]);
+	assert_true(result.bytes == 0, "expected write error to report zero bytes");
+	assert_true(connection.state() == ClientConnection::CLOSING,
+		"expected write error to close the connection");
+	assert_true(connection.closeReason() == "client write error",
+		"expected write error close reason");
+}
+
 int	main(void)
 {
 	try
@@ -145,6 +212,9 @@ int	main(void)
 		test_peer_close_moves_connection_to_closing();
 		test_write_consumes_only_written_bytes();
 		test_io_ignores_events_without_matching_readiness();
+		test_read_would_block_keeps_connection_open();
+		test_read_error_moves_connection_to_closing();
+		test_write_error_moves_connection_to_closing();
 	}
 	catch (const std::exception &error)
 	{

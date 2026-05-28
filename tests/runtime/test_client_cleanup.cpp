@@ -157,12 +157,49 @@ static void	test_closing_client_cleanup_does_not_touch_active_clients()
 		"expected listener plus active client to remain watched");
 }
 
+static void	test_close_all_unregisters_and_closes_clients()
+{
+	unsigned short	port;
+	int				listenerFd;
+	int				peerOne;
+	int				peerTwo;
+	int				firstAcceptedFd;
+	int				secondAcceptedFd;
+	EventLoop		loop;
+	ClientManager	manager;
+
+	listenerFd = create_listener(port);
+	peerOne = connect_client(port);
+	peerTwo = connect_client(port);
+	loop.registerListener(listenerFd);
+	manager.acceptReady(first_listener_event(loop), loop);
+	assert_true(manager.connections().size() == 2,
+		"expected two accepted clients before closeAll");
+	firstAcceptedFd = manager.connections().front().fd();
+	secondAcceptedFd = manager.connections().back().fd();
+
+	manager.closeAll(loop);
+
+	close_fd(peerOne);
+	close_fd(peerTwo);
+	close_fd(listenerFd);
+	assert_true(manager.connections().empty(),
+		"expected closeAll to erase all clients");
+	assert_true(loop.watchedCount() == 1,
+		"expected only listener to remain watched after closeAll");
+	assert_true(fcntl(firstAcceptedFd, F_GETFL, 0) < 0,
+		"expected first accepted fd to be closed by closeAll");
+	assert_true(fcntl(secondAcceptedFd, F_GETFL, 0) < 0,
+		"expected second accepted fd to be closed by closeAll");
+}
+
 int	main(void)
 {
 	try
 	{
 		test_timeout_closes_client_and_unregisters_fd();
 		test_closing_client_cleanup_does_not_touch_active_clients();
+		test_close_all_unregisters_and_closes_clients();
 	}
 	catch (const std::exception &error)
 	{

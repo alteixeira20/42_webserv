@@ -16,7 +16,7 @@ SECTION_TITLES = {
     "all": "All tests",
     "build": "Build",
     "config": "Config foundation",
-    "runtime": "Runtime foundation",
+    "runtime": "Runtime tests",
     "http": "HTTP",
     "cgi": "CGI",
     "stress": "Stress",
@@ -120,10 +120,10 @@ def runtime_tests():
     return [
         TestCase(
             "runtime",
-            "ListenerManager, EventLoop, ClientConnection, and "
-            "ClientManager tests",
+            "ListenerManager, EventLoop, ClientConnection, ClientManager, "
+            "ClientIo, cleanup, and dummy response runtime tests",
             ["make", "test_runtime_internal"],
-            "Run the active runtime foundation C++ test binaries",
+            "Run the active runtime C++ test binaries",
         )
     ]
 
@@ -329,10 +329,11 @@ def print_summary(results, colors):
 
 def list_sections():
     print("Available test sections:")
-    print("  all      build, config foundation, runtime foundation, planned")
+    print("  all      build, config foundation, runtime tests, planned")
     print("  build    clean build, compile, no-relink, startup smoke")
     print("  config   active config/parser/model foundation tests")
-    print("  runtime  active runtime foundation tests")
+    print("  runtime  active listener, event loop, client I/O, cleanup, "
+          "and dummy response tests")
     print("  http     planned; currently skipped")
     print("  cgi      planned; currently skipped")
     print("  stress   planned; currently skipped")
@@ -366,7 +367,7 @@ def print_menu(colors):
     print("  1. All tests")
     print("  2. Build")
     print("  3. Config foundation")
-    print("  4. Runtime foundation")
+    print("  4. Runtime tests")
     print("  5. HTTP (planned)")
     print("  6. CGI (planned)")
     print("  7. Stress (planned)")
