@@ -14,7 +14,7 @@ class ConfigException: public std::exception
         ConfigException(const ConfigException &other);
         ConfigException &operator=(const ConfigException &other);
         virtual ~ConfigException() throw();
-        
+
         virtual const char* what() const throw();
         unsigned int        getLine() const;
         unsigned int        getColumn() const;

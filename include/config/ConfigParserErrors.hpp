@@ -33,6 +33,16 @@ namespace ConfigParserErrors
 		"expected root value";
 	static const char* const EXPECTED_INDEX_VALUE =
 		"expected index value";
+	static const char* const EXPECTED_BODY_SIZE_VALUE =
+		"expected client_max_body_size value";
+	static const char* const INVALID_BODY_SIZE =
+		"invalid client_max_body_size value";
+	static const char* const EXPECTED_ERROR_STATUS =
+		"expected error_page status code";
+	static const char* const EXPECTED_ERROR_PAGE_PATH =
+		"expected error_page path";
+	static const char* const INVALID_ERROR_STATUS =
+		"invalid error_page status code";
 }
 
 #endif

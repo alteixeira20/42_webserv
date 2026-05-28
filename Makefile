@@ -10,11 +10,20 @@ DIFF_FILES	:= .gitignore Makefile README.md configs docs include src tests
 SRC_DIR		:= src
 OBJ_DIR		:= obj
 
+LINT_FILES	:= .gitignore Makefile README.md configs docs include src tests
+CODE_FILES	:= $(shell find include src tests -type f \( -name '*.hpp' -o -name '*.h' -o -name '*.cpp' -o -name '*.c' \))
+TEST_BINS	:= tests/config/test_config_foundation \
+			   tests/runtime/test_client_connection \
+			   tests/runtime/test_client_manager \
+			   tests/runtime/test_event_loop \
+			   tests/runtime/test_listener_manager
+
 COMMON_SRCS	:= \
 	$(SRC_DIR)/config/Config.cpp \
 	$(SRC_DIR)/config/ConfigException.cpp \
 	$(SRC_DIR)/config/ConfigParser.cpp \
 	$(SRC_DIR)/config/ConfigParserServer.cpp \
+	$(SRC_DIR)/config/ConfigParserValues.cpp \
 	$(SRC_DIR)/config/ConfigToken.cpp \
 	$(SRC_DIR)/config/ConfigTokenizer.cpp \
 	$(SRC_DIR)/config/ListenConfig.cpp \
@@ -74,14 +83,6 @@ test:
 $(TEST_CONFIG): tests/config/test_config_foundation.cpp $(COMMON_SRCS)
 	$(CXX) $(CXXFLAGS) $(INC) tests/config/test_config_foundation.cpp $(COMMON_SRCS) -o $(TEST_CONFIG)
 
-clean:
-	rm -rf $(OBJ_DIR)
-
-fclean: clean
-	rm -f $(NAME) $(TEST_LISTENER) $(TEST_CLIENT) $(TEST_CLIENT_MANAGER) $(TEST_EVENT_LOOP) $(TEST_CONFIG)
-
-re: fclean all
-
 diff:
 	@mkdir -p "$$(dirname "$(DIFF_OUT)")"
 	@rm -f "$(DIFF_OUT)"
@@ -119,4 +120,61 @@ diff:
 		echo "Diff output saved at $(DIFF_OUT)."; \
 	fi
 
-.PHONY: all test test_config_internal test_runtime_internal diff clean fclean re
+lint:
+	@status=0; \
+	echo "== lint: git whitespace errors =="; \
+	echo "checks: trailing whitespace, bad conflict markers, whitespace errors in current diff"; \
+	git diff --check -- $(LINT_FILES) || status=1; \
+	echo ""; \
+	echo "== lint: final newline =="; \
+	echo "checks: every C/C++ source/header file ends with a newline"; \
+	for file in $(CODE_FILES); do \
+		if [ -s "$$file" ] && [ "$$(tail -c 1 "$$file" | wc -l)" -eq 0 ]; then \
+			echo "missing final newline: $$file"; \
+			status=1; \
+		fi; \
+	done; \
+	echo ""; \
+	echo "== lint: excessive blank lines =="; \
+	echo "checks: more than two consecutive blank lines in C/C++ files"; \
+	for file in $(CODE_FILES); do \
+		awk 'BEGIN {blank=0; found=0} \
+			/^$$/ {blank++} \
+			!/^[[:space:]]*$$/ {blank=0} \
+			blank > 2 {print FILENAME ":" FNR ": more than two consecutive blank lines"; found=1} \
+			END {exit found}' "$$file" || status=1; \
+	done; \
+	echo ""; \
+	echo "== lint: generated test binaries =="; \
+	echo "checks: generated test executables are not tracked by git"; \
+	if git ls-files $(TEST_BINS) | grep .; then \
+		echo "generated test binary is tracked"; \
+		status=1; \
+	fi; \
+	echo ""; \
+	echo "== lint: conflict markers =="; \
+	echo "checks: no unresolved merge conflict markers in project files"; \
+	if grep -RInE '^(<<<<<<<|=======|>>>>>>>)' $(LINT_FILES) >/tmp/webserv_lint_conflicts.txt 2>/dev/null; then \
+		cat /tmp/webserv_lint_conflicts.txt; \
+		rm -f /tmp/webserv_lint_conflicts.txt; \
+		status=1; \
+	else \
+		rm -f /tmp/webserv_lint_conflicts.txt; \
+	fi; \
+	echo ""; \
+	if [ $$status -eq 0 ]; then \
+		echo "lint: OK"; \
+	else \
+		echo "lint: FAILED"; \
+	fi; \
+	exit $$status
+
+clean:
+	rm -rf $(OBJ_DIR)
+
+fclean: clean
+	rm -f $(NAME) $(TEST_LISTENER) $(TEST_CLIENT) $(TEST_CLIENT_MANAGER) $(TEST_EVENT_LOOP) $(TEST_CONFIG)
+
+re: fclean all
+
+.PHONY: all test test_config_internal test_runtime_internal diff lint clean fclean re

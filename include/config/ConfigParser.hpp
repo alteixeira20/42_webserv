@@ -29,29 +29,50 @@ class ConfigParser
 		std::size_t				    _index;
 
 		/* Parser state */
-		void					    reset(const std::vector<ConfigToken> &tokens);
-		bool				    	isAtEnd() const;
-		const ConfigToken&		    current() const;
-		const ConfigToken&			advance();
+		void					reset(const std::vector<ConfigToken> &tokens);
+		bool				    isAtEnd() const;
+		const ConfigToken&		current() const;
+		const ConfigToken&		advance();
 
-		/* Token matching */
+		/*
+		** Token matching.
+		** expect() is the central place for syntax error locations.
+		*/
 		bool					check(ConfigTokenType type) const;
 		bool					match(ConfigTokenType type);
 		const ConfigToken&		expect(ConfigTokenType type,
 			const std::string &message);
 		const ConfigToken&		expectWord(const std::string &message);
 
-		/* Grammar parsing */
+		/*
+		** Server grammar.
+		** These functions parse server-level structure and directives.
+		*/
 		Config					parseConfig();
 		ServerConfig			parseServer();
 		void					parseServerDirective(ServerConfig &server);
 		void					parseListen(ServerConfig &server);
-		ListenConfig			parseListenValue(const ConfigToken &token) const;
-		unsigned int			parsePort(const std::string &value,
-									const ConfigToken &token) const;
 		void					parseServerName(ServerConfig &server);
 		void					parseRoot(ServerConfig &server);
 		void					parseIndex(ServerConfig &server);
+		void					parseClientMaxBodySize(ServerConfig &server);
+		void					parseErrorPage(ServerConfig &server);
+		void					addErrorPages(ServerConfig &server,
+									const std::vector<unsigned int> &statuses,
+									const std::string &path);
+
+		/*
+		** Value parsing.
+		** These helpers convert directive values into typed config data.
+		*/
+		ListenConfig			parseListenValue(
+									const ConfigToken &token) const;
+		unsigned int			parsePort(const std::string &value,
+									const ConfigToken &token) const;
+		std::size_t				parseSize(const std::string &value,
+									const ConfigToken &token) const;
+		unsigned int			parseStatusCode(const std::string &value,
+									const ConfigToken &token) const;
 		bool					isOnlyDigits(const std::string &value) const;
 };
 

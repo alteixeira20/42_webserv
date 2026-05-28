@@ -6,9 +6,18 @@
 #include "config/ConfigTokenizer.hpp"
 
 /*
-** File reading is kept outside ConfigParser because it is only an input
-** source detail. The parser itself works from strings and tokens.
+** Core parser layer.
+**
+** This file owns parser setup and token navigation:
+** - loading config text from a file
+** - tokenizing input strings
+** - resetting parser state
+** - moving through tokens
+** - producing consistent syntax errors
+**
+** Grammar-specific parsing is split into dedicated files.
 */
+
 static std::string	readFileContent(const std::string& path)
 {
 	std::ifstream		file;
@@ -70,6 +79,12 @@ Config  ConfigParser::parseString(const std::string &content)
     return (parseConfig());
 }
 
+/*
+** Parser state is reset for each independent parse operation.
+** Tokenizer always appends an END token, so current() remains valid while
+** parser functions respect isAtEnd().
+*/
+
 void    ConfigParser::reset(const std::vector<ConfigToken> &tokens)
 {
     _tokens = tokens;
@@ -95,6 +110,11 @@ const ConfigToken&	ConfigParser::advance()
 
 	return (token);
 }
+
+/*
+** Token matching helpers keep grammar functions small.
+** expect() is the single place where syntax errors gain line/column context.
+*/
 
 bool	ConfigParser::check(ConfigTokenType type) const
 {

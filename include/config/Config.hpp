@@ -12,7 +12,7 @@ class   Config
 		Config(const Config &other);
 		Config&	operator=(const Config &other);
 		~Config();
-        
+
         void                                addServer(const ServerConfig &server);
         const std::vector<ServerConfig>&    getServers() const;
         std::vector<ListenConfig>           getUniqueListens() const;

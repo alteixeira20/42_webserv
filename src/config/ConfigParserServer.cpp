@@ -1,8 +1,21 @@
-#include <cstdlib>
 #include "config/ConfigParser.hpp"
 #include "config/ConfigParserErrors.hpp"
 #include "config/ConfigException.hpp"
 
+/*
+** Server grammar layer.
+**
+** This file turns server-level tokens into ServerConfig fields.
+** It does not validate filesystem paths, bind sockets, or resolve routes.
+**
+** Supported server directives:
+** - listen
+** - server_name
+** - root
+** - index
+** - client_max_body_size
+** - error_page
+*/
 Config	ConfigParser::parseConfig()
 {
 	Config	config;
@@ -47,6 +60,10 @@ void	ConfigParser::parseServerDirective(ServerConfig &server)
 		parseRoot(server);
 	else if (token.getValue() == "index")
 		parseIndex(server);
+	else if (token.getValue() == "client_max_body_size")
+		parseClientMaxBodySize(server);
+	else if (token.getValue() == "error_page")
+		parseErrorPage(server);
 	else
 		throw (ConfigException(ConfigParserErrors::UNKNOWN_SERVER_DIRECTIVE,
 			token.getLine(), token.getColumn()));
@@ -58,46 +75,6 @@ void	ConfigParser::parseListen(ServerConfig &server)
 
 	server.addListen(parseListenValue(token));
 	expect(CONFIG_TOKEN_SEMICOLON, ConfigParserErrors::EXPECTED_DIRECTIVE_SEMICOLON);
-}
-
-ListenConfig	ConfigParser::parseListenValue(const ConfigToken &token) const
-{
-	std::string				value;
-	std::string				host;
-	std::string				portText;
-	std::string::size_type	separator;
-
-	value = token.getValue();
-	separator = value.find(':');
-
-	if (separator == std::string::npos)
-		return (ListenConfig("0.0.0.0", parsePort(value, token)));
-	
-	if (separator == 0 || separator == value.length() - 1)
-		throw (ConfigException(ConfigParserErrors::INVALID_LISTEN_VALUE,
-			token.getLine(), token.getColumn()));
-	host = value.substr(0, separator);
-	portText = value.substr(separator + 1);
-
-	return (ListenConfig(host, parsePort(portText, token)));
-}
-
-unsigned int	ConfigParser::parsePort(const std::string &value,
-	const ConfigToken &token) const
-{
-	long	port;
-
-	if (!isOnlyDigits(value))
-		throw (ConfigException(ConfigParserErrors::INVALID_LISTEN_PORT,
-			token.getLine(), token.getColumn()));
-
-	port = std::strtol(value.c_str(), NULL, 10);
-
-	if (port <= 0 || port > 65535)
-		throw (ConfigException(ConfigParserErrors::INVALID_LISTEN_PORT,
-			token.getLine(), token.getColumn()));
-	
-	return (static_cast<unsigned int>(port));
 }
 
 void	ConfigParser::parseServerName(ServerConfig &server)
@@ -134,18 +111,56 @@ void	ConfigParser::parseIndex(ServerConfig &server)
 		ConfigParserErrors::EXPECTED_DIRECTIVE_SEMICOLON);
 }
 
-bool	ConfigParser::isOnlyDigits(const std::string &value) const
+void	ConfigParser::parseClientMaxBodySize(ServerConfig &server)
 {
-	std::string::size_type	index;
+	const ConfigToken&	token = expectWord(
+			ConfigParserErrors::EXPECTED_BODY_SIZE_VALUE);
 
-	if (value.empty())
-		return (false);
-	index = 0;
-	while (index < value.length())
+	server.setClientMaxBodySize(parseSize(token.getValue(), token));
+	expect(CONFIG_TOKEN_SEMICOLON,
+		ConfigParserErrors::EXPECTED_DIRECTIVE_SEMICOLON);
+}
+
+/*
+** error_page accepts one or more status codes followed by one path:
+**
+**     error_page 404 /errors/404.html;
+**     error_page 403 404 500 /errors/default.html;
+**
+** The last word before ';' is treated as the path. Every previous word
+** must be a valid status code and is mapped to that same path.
+*/
+void	ConfigParser::parseErrorPage(ServerConfig &server)
+{
+	std::vector<unsigned int>	statuses;
+	ConfigToken					token;
+	std::string					path;
+
+	token = expectWord(ConfigParserErrors::EXPECTED_ERROR_STATUS);
+	while (!check(CONFIG_TOKEN_SEMICOLON))
 	{
-		if (value[index] < '0' || value[index] > '9')
-			return (false);
-		++index;
+		statuses.push_back(parseStatusCode(token.getValue(), token));
+		token = expectWord(ConfigParserErrors::EXPECTED_ERROR_PAGE_PATH);
 	}
-	return (true);
+	if (statuses.empty())
+		throw (ConfigException(ConfigParserErrors::EXPECTED_ERROR_STATUS,
+				token.getLine(), token.getColumn()));
+	path = token.getValue();
+	addErrorPages(server, statuses, path);
+	expect(CONFIG_TOKEN_SEMICOLON,
+		ConfigParserErrors::EXPECTED_DIRECTIVE_SEMICOLON);
+}
+
+void	ConfigParser::addErrorPages(ServerConfig &server,
+	const std::vector<unsigned int> &statuses,
+	const std::string &path)
+{
+	std::vector<unsigned int>::const_iterator	it;
+
+	it = statuses.begin();
+	while (it != statuses.end())
+	{
+		server.addErrorPage(*it, path);
+		++it;
+	}
 }
