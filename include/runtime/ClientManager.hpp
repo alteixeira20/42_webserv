@@ -4,6 +4,7 @@
 # include "ClientConnection.hpp"
 # include "EventLoop.hpp"
 
+# include <ctime>
 # include <list>
 # include <string>
 
@@ -17,7 +18,13 @@ public:
 
 	std::size_t				acceptReady(const EventLoopEvent &event,
 								EventLoop &eventLoop);
+	std::size_t				closeTimedOut(EventLoop &eventLoop,
+								std::time_t now,
+								std::time_t timeoutSeconds);
+	std::size_t				removeClosing(EventLoop &eventLoop);
 	void					closeAll(void);
+	void					closeAll(EventLoop &eventLoop);
+	ConnectionList			&connections(void);
 	const ConnectionList		&connections(void) const;
 
 private:
@@ -27,6 +34,8 @@ private:
 	ClientManager	&operator=(const ClientManager &other);
 
 	void	addClient(int clientFd, int listenerFd, EventLoop &eventLoop);
+	ConnectionList::iterator	removeClient(ConnectionList::iterator it,
+								EventLoop &eventLoop);
 };
 
 #endif

@@ -63,6 +63,22 @@ static void	test_closing_records_reason_and_disables_io()
 	assert_true(!connection.wantsWrite(), "closing clients should not want writes");
 }
 
+static void	test_timeout_uses_last_activity()
+{
+	ClientConnection	connection(42, 7);
+	std::time_t		lastActivity;
+
+	lastActivity = connection.lastActivity();
+	assert_true(!connection.isTimedOut(lastActivity - 1, 0),
+		"future activity timestamps should not time out");
+	assert_true(connection.isTimedOut(lastActivity, 0),
+		"zero timeout should expire at last activity time");
+	assert_true(!connection.isTimedOut(lastActivity, 10),
+		"timeout should wait for full timeout interval");
+	assert_true(connection.isTimedOut(lastActivity + 10, 10),
+		"timeout should expire after full timeout interval");
+}
+
 int	main(void)
 {
 	try
@@ -70,6 +86,7 @@ int	main(void)
 		test_initial_state_tracks_fd_ownership();
 		test_buffers_and_poll_intent_follow_state();
 		test_closing_records_reason_and_disables_io();
+		test_timeout_uses_last_activity();
 	}
 	catch (const std::exception &error)
 	{

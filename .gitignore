@@ -22,7 +22,10 @@ tests/tmp/
 # Test binaries
 /tests/config/test_config_foundation
 /tests/runtime/test_client_connection
+/tests/runtime/test_client_cleanup
+/tests/runtime/test_client_io
 /tests/runtime/test_client_manager
+/tests/runtime/test_dummy_response_runtime
 /tests/runtime/test_event_loop
 /tests/runtime/test_listener_manager
 

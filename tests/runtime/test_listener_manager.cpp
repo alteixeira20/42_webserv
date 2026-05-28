@@ -1,9 +1,12 @@
 #include "runtime/ListenerManager.hpp"
 
+#include <arpa/inet.h>
 #include <fcntl.h>
 #include <iostream>
+#include <netinet/in.h>
 #include <stdexcept>
 #include <string>
+#include <sys/socket.h>
 #include <vector>
 
 static void	assert_true(bool condition, const std::string &message)
@@ -16,6 +19,18 @@ static bool	is_non_blocking(int fd)
 {
 	int flags = fcntl(fd, F_GETFL, 0);
 	return (flags >= 0 && (flags & O_NONBLOCK));
+}
+
+static unsigned short	socket_bound_port(int fd)
+{
+	sockaddr_in	address;
+	socklen_t	addressLength;
+
+	addressLength = sizeof(address);
+	if (getsockname(fd, reinterpret_cast<sockaddr *>(&address),
+			&addressLength) < 0)
+		throw std::runtime_error("getsockname failed");
+	return (ntohs(address.sin_port));
 }
 
 static void	test_opens_all_configured_endpoints()
@@ -39,6 +54,11 @@ static void	test_opens_all_configured_endpoints()
 			"expected listener to keep its host config");
 		assert_true(manager.listeners()[i].config.getPort() == endpoints[i].getPort(),
 			"expected listener to keep its port config");
+		assert_true(manager.listeners()[i].boundPort > 0,
+			"expected port 0 listener to expose assigned bound port");
+		assert_true(manager.listeners()[i].boundPort
+			== socket_bound_port(manager.listeners()[i].fd),
+			"expected listener boundPort to match getsockname");
 	}
 	std::vector<int> fds;
 	for (std::size_t i = 0; i < manager.listeners().size(); ++i)

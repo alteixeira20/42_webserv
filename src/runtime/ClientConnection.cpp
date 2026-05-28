@@ -85,6 +85,14 @@ void	ClientConnection::touch(void)
 	_lastActivity = std::time(NULL);
 }
 
+bool	ClientConnection::isTimedOut(std::time_t now,
+	std::time_t timeoutSeconds) const
+{
+	if (now < _lastActivity)
+		return (false);
+	return ((now - _lastActivity) >= timeoutSeconds);
+}
+
 bool	ClientConnection::wantsRead(void) const
 {
 	return (_state == READING_HEADERS || _state == READING_BODY);

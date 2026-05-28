@@ -7,6 +7,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -93,6 +94,19 @@ static int	try_open_socket(const ListenConfig &config, const addrinfo *address)
 	return (fd);
 }
 
+static unsigned short	get_bound_port(int fd)
+{
+	sockaddr_in	address;
+	socklen_t	addressLength;
+
+	std::memset(&address, 0, sizeof(address));
+	addressLength = sizeof(address);
+	if (getsockname(fd, reinterpret_cast<sockaddr *>(&address),
+			&addressLength) < 0)
+		throw std::runtime_error(socket_error("getsockname failed"));
+	return (ntohs(address.sin_port));
+}
+
 static ListenerSocket	create_listener_socket(const ListenConfig &config)
 {
 	addrinfo	*addresses;
@@ -125,18 +139,21 @@ static ListenerSocket	create_listener_socket(const ListenConfig &config)
 	}
 	if (fd < 0)
 		throw std::runtime_error("could not open listener socket");
-	return (ListenerSocket(fd, config));
+	return (ListenerSocket(fd, config, get_bound_port(fd)));
 }
 
 ListenerSocket::ListenerSocket(void) :
 	fd(-1),
-	config()
+	config(),
+	boundPort(0)
 {
 }
 
-ListenerSocket::ListenerSocket(int fd, const ListenConfig &config) :
+ListenerSocket::ListenerSocket(int fd, const ListenConfig &config,
+	unsigned short boundPort) :
 	fd(fd),
-	config(config)
+	config(config),
+	boundPort(boundPort)
 {
 }
 

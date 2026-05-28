@@ -9,9 +9,10 @@ struct ListenerSocket
 {
 	int				fd;
 	ListenConfig	config;
+	unsigned short	boundPort;
 
 	ListenerSocket(void);
-	ListenerSocket(int fd, const ListenConfig &config);
+	ListenerSocket(int fd, const ListenConfig &config, unsigned short boundPort);
 };
 
 class ListenerManager

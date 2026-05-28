@@ -69,12 +69,70 @@ std::size_t	ClientManager::acceptReady(const EventLoopEvent &event,
 	return (accepted);
 }
 
+std::size_t	ClientManager::closeTimedOut(EventLoop &eventLoop,
+	std::time_t now, std::time_t timeoutSeconds)
+{
+	ConnectionList::iterator	it;
+	std::size_t				removed;
+
+	removed = 0;
+	it = _connections.begin();
+	while (it != _connections.end())
+	{
+		if (it->isTimedOut(now, timeoutSeconds))
+		{
+			it->closeWithReason("client timeout");
+			it = removeClient(it, eventLoop);
+			++removed;
+		}
+		else
+			++it;
+	}
+	return (removed);
+}
+
+std::size_t	ClientManager::removeClosing(EventLoop &eventLoop)
+{
+	ConnectionList::iterator	it;
+	std::size_t				removed;
+
+	removed = 0;
+	it = _connections.begin();
+	while (it != _connections.end())
+	{
+		if (it->state() == ClientConnection::CLOSING)
+		{
+			it = removeClient(it, eventLoop);
+			++removed;
+		}
+		else
+			++it;
+	}
+	return (removed);
+}
+
 void	ClientManager::closeAll(void)
 {
 	for (ConnectionList::iterator it = _connections.begin();
 		it != _connections.end(); ++it)
 		close_fd(it->fd());
 	_connections.clear();
+}
+
+void	ClientManager::closeAll(EventLoop &eventLoop)
+{
+	for (ConnectionList::iterator it = _connections.begin();
+		it != _connections.end(); ++it)
+	{
+		eventLoop.unregisterFd(it->fd());
+		close_fd(it->fd());
+	}
+	_connections.clear();
+}
+
+ClientManager::ConnectionList	&ClientManager::connections(void)
+{
+	return (_connections);
 }
 
 const ClientManager::ConnectionList	&ClientManager::connections(void) const
@@ -87,4 +145,12 @@ void	ClientManager::addClient(int clientFd, int listenerFd, EventLoop &eventLoop
 	set_non_blocking(clientFd);
 	_connections.push_back(ClientConnection(clientFd, listenerFd));
 	eventLoop.registerClient(_connections.back());
+}
+
+ClientManager::ConnectionList::iterator	ClientManager::removeClient(
+	ConnectionList::iterator it, EventLoop &eventLoop)
+{
+	eventLoop.unregisterFd(it->fd());
+	close_fd(it->fd());
+	return (_connections.erase(it));
 }

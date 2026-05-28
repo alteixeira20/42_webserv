@@ -14,6 +14,9 @@ Status: Implemented
 - `poll()`-based event readiness wrapper.
 - Client connection state holder.
 - Client accept/store foundation.
+- Client cleanup for timeouts, closing connections, and full shutdown.
+- Guarded client socket read/write helper.
+- Dummy fixed-response runtime path.
 - Runtime tests for the foundation modules.
 
 Status: Not responsible for
@@ -77,6 +80,8 @@ What it does:
 - Calls `listen()`.
 - Sets listener fds to non-blocking mode.
 - Stores listener fd plus the `ListenConfig` that produced it.
+- Stores the actual bound port reported by `getsockname()`, so port `0`
+  listeners expose the kernel-assigned port.
 - Closes listener fds in `closeAll()` and the destructor.
 - Cleans up already-opened listeners if opening a later endpoint fails.
 
@@ -137,6 +142,7 @@ What it exposes:
 - Buffer append/consume helpers.
 - State transition helpers.
 - Close reason recording.
+- `isTimedOut()` based on last activity and a caller-provided timeout.
 
 What it does not do:
 
@@ -159,15 +165,63 @@ What it does:
 - Sets accepted client sockets to non-blocking mode.
 - Stores `ClientConnection` objects.
 - Registers accepted clients with `EventLoop`.
-- Closes all stored client fds in `closeAll()` and the destructor.
+- Closes and removes timed-out clients.
+- Removes clients already in the closing state.
+- Closes all stored client fds in `closeAll()`, `closeAll(EventLoop&)`, and
+  the destructor.
 
 What it does not do:
 
-- It does not implement production client reads.
-- It does not implement production client writes.
-- It does not remove individual clients on I/O error or disconnect yet.
 - It does not parse HTTP requests.
 - It does not build HTTP responses.
+
+## ClientIo
+
+Status: Implemented
+
+`ClientIo` performs one guarded socket read or write for a ready client event.
+
+What it does:
+
+- Reads only when the event is a readable client event and the connection wants
+  reads.
+- Appends positive read bytes to the client read buffer.
+- Marks EOF as a closing client with `client closed connection`.
+- Marks non-`EAGAIN` read errors as `client read error`.
+- Writes only when the event is a writable client event and the connection has
+  buffered response data.
+- Consumes only the bytes actually written.
+- Marks non-`EAGAIN` write errors as `client write error`.
+
+What it does not do:
+
+- It does not parse request bytes.
+- It does not decide when a request is complete.
+- It does not generate a response.
+
+## DummyResponseRuntime
+
+Status: Implemented
+
+`DummyResponseRuntime` is a temporary runtime path used to exercise listener
+acceptance, client I/O, response buffering, and cleanup before the real HTTP
+pipeline is integrated.
+
+What it does:
+
+- Polls the `EventLoop` once.
+- Accepts ready listener events through `ClientManager`.
+- Handles ready client events through `ClientIo`.
+- Queues a minimal fixed `HTTP/1.1 200 OK` response after reading request bytes.
+- Closes clients after the fixed response is sent.
+- Removes closing clients after each pump.
+
+What it does not do:
+
+- It does not parse HTTP.
+- It does not route requests.
+- It does not serve files.
+- It does not execute CGI.
 
 ## Current Limitations
 
@@ -175,10 +229,8 @@ Status: Temporary
 
 - `main` opens listeners and then exits.
 - There is no persistent main loop yet.
-- There is no HTTP request read path.
-- There is no response write path.
+- There is a temporary dummy response path, not the real HTTP response pipeline.
 - There is no CGI pipe execution.
-- There is no per-client I/O error or disconnect cleanup.
 - Runtime currently depends on parsed listen endpoints; there is no temporary
   fallback endpoint.
 
@@ -188,14 +240,9 @@ Status: Planned
 
 - Implement the full main `poll()`/`select()`/equivalent loop.
 - Monitor read and write readiness simultaneously in the main loop.
-- Never read or write sockets without readiness.
 - Never read or write CGI pipes without readiness.
 - Perform at most one read or one write per client per poll cycle.
-- Check `read()`, `recv()`, `write()`, and `send()` return values correctly.
-- Do not use `errno` after `read()`, `recv()`, `write()`, or `send()` to decide
-  normal behavior.
-- Close and remove clients cleanly on disconnect.
-- Close and remove clients cleanly on socket I/O error.
+- Integrate guarded client I/O into the full server loop.
 - Enforce CGI pipe readiness discipline.
 
 ## Next Runtime Tasks
@@ -204,9 +251,6 @@ Status: Planned
 
 - Wire listener fds into a persistent `EventLoop`.
 - Accept clients continuously from readable listener events.
-- Implement guarded client reads.
-- Implement guarded client writes.
-- Implement per-client cleanup and removal.
 - Integrate the HTTP parser.
 - Integrate response building.
 - Later integrate CGI pipes with readiness-aware reads and writes.
