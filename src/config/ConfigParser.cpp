@@ -4,6 +4,7 @@
 #include "config/ConfigParserErrors.hpp"
 #include "config/ConfigException.hpp"
 #include "config/ConfigTokenizer.hpp"
+#include "config/ConfigValidator.hpp"
 
 /*
 ** Core parser layer.
@@ -72,11 +73,15 @@ Config  ConfigParser::parseFile(const std::string &path)
 
 Config  ConfigParser::parseString(const std::string &content)
 {
-    ConfigTokenizer tokenizer;
+	ConfigTokenizer	tokenizer;
+	ConfigValidator	validator;
+	Config			config;
 
-    reset(tokenizer.tokenize(content));
+	reset(tokenizer.tokenize(content));
+	config = parseConfig();
+	validator.validate(config);
 
-    return (parseConfig());
+	return (config);
 }
 
 /*
