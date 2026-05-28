@@ -25,6 +25,7 @@ COMMON_SRCS	:= \
 	$(SRC_DIR)/config/ConfigParserServer.cpp \
 	$(SRC_DIR)/config/ConfigParserRoute.cpp \
 	$(SRC_DIR)/config/ConfigParserValues.cpp \
+	$(SRC_DIR)/config/ConfigResolver.cpp \
 	$(SRC_DIR)/config/ConfigToken.cpp \
 	$(SRC_DIR)/config/ConfigTokenizer.cpp \
 	$(SRC_DIR)/config/ConfigValidator.cpp \
