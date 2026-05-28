@@ -49,6 +49,9 @@ class ConfigParser
 		ListenConfig			parseListenValue(const ConfigToken &token) const;
 		unsigned int			parsePort(const std::string &value,
 									const ConfigToken &token) const;
+		void					parseServerName(ServerConfig &server);
+		void					parseRoot(ServerConfig &server);
+		void					parseIndex(ServerConfig &server);
 		bool					isOnlyDigits(const std::string &value) const;
 };
 

@@ -41,6 +41,12 @@ void	ConfigParser::parseServerDirective(ServerConfig &server)
 
 	if (token.getValue() == "listen")
 		parseListen(server);
+	else if (token.getValue() == "server_name")
+		parseServerName(server);
+	else if (token.getValue() == "root")
+		parseRoot(server);
+	else if (token.getValue() == "index")
+		parseIndex(server);
 	else
 		throw (ConfigException(ConfigParserErrors::UNKNOWN_SERVER_DIRECTIVE,
 			token.getLine(), token.getColumn()));
@@ -92,6 +98,40 @@ unsigned int	ConfigParser::parsePort(const std::string &value,
 			token.getLine(), token.getColumn()));
 	
 	return (static_cast<unsigned int>(port));
+}
+
+void	ConfigParser::parseServerName(ServerConfig &server)
+{
+	const ConfigToken*	token;
+
+	token = &expectWord(ConfigParserErrors::EXPECTED_SERVER_NAME);
+	while (true)
+	{
+		server.addServerName(token->getValue());
+		if (match(CONFIG_TOKEN_SEMICOLON))
+			break ;
+		token = &expectWord(ConfigParserErrors::EXPECTED_SERVER_NAME);
+	}
+}
+
+void	ConfigParser::parseRoot(ServerConfig &server)
+{
+	const ConfigToken&	token = expectWord(
+			ConfigParserErrors::EXPECTED_ROOT_VALUE);
+
+	server.setRoot(token.getValue());
+	expect(CONFIG_TOKEN_SEMICOLON,
+		ConfigParserErrors::EXPECTED_DIRECTIVE_SEMICOLON);
+}
+
+void	ConfigParser::parseIndex(ServerConfig &server)
+{
+	const ConfigToken&	token = expectWord(
+		ConfigParserErrors::EXPECTED_INDEX_VALUE);
+
+	server.setIndex(token.getValue());
+	expect(CONFIG_TOKEN_SEMICOLON,
+		ConfigParserErrors::EXPECTED_DIRECTIVE_SEMICOLON);
 }
 
 bool	ConfigParser::isOnlyDigits(const std::string &value) const

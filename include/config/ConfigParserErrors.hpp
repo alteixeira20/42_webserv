@@ -27,6 +27,12 @@ namespace ConfigParserErrors
 		"invalid listen value";
 	static const char* const INVALID_LISTEN_PORT =
 		"invalid listen port";
+	static const char* const EXPECTED_SERVER_NAME =
+		"expected server name";
+	static const char* const EXPECTED_ROOT_VALUE =
+		"expected root value";
+	static const char* const EXPECTED_INDEX_VALUE =
+		"expected index value";
 }
 
 #endif
