@@ -34,6 +34,7 @@ public:
 	void	closeWithReason(const std::string &reason);
 	void	touch(void);
 
+	bool	isTimedOut(std::time_t now, std::time_t timeoutSeconds) const;
 	bool	wantsRead(void) const;
 	bool	wantsWrite(void) const;
 

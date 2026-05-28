@@ -14,7 +14,10 @@ LINT_FILES	:= .gitignore Makefile README.md configs docs include src tests
 CODE_FILES	:= $(shell find include src tests -type f \( -name '*.hpp' -o -name '*.h' -o -name '*.cpp' -o -name '*.c' \))
 TEST_BINS	:= tests/config/test_config_foundation \
 			   tests/runtime/test_client_connection \
+			   tests/runtime/test_client_cleanup \
+			   tests/runtime/test_client_io \
 			   tests/runtime/test_client_manager \
+			   tests/runtime/test_dummy_response_runtime \
 			   tests/runtime/test_event_loop \
 			   tests/runtime/test_listener_manager
 
@@ -34,7 +37,9 @@ COMMON_SRCS	:= \
 	$(SRC_DIR)/config/ServerConfig.cpp \
 	$(SRC_DIR)/http/HttpMethod.cpp \
 	$(SRC_DIR)/runtime/ClientConnection.cpp \
+	$(SRC_DIR)/runtime/ClientIo.cpp \
 	$(SRC_DIR)/runtime/ClientManager.cpp \
+	$(SRC_DIR)/runtime/DummyResponseRuntime.cpp \
 	$(SRC_DIR)/runtime/EventLoop.cpp \
 	$(SRC_DIR)/runtime/ListenerManager.cpp
 
@@ -46,7 +51,10 @@ OBJS		:= $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 TEST_LISTENER	:= tests/runtime/test_listener_manager
 TEST_CLIENT		:= tests/runtime/test_client_connection
+TEST_CLIENT_CLEANUP	:= tests/runtime/test_client_cleanup
+TEST_CLIENT_IO	:= tests/runtime/test_client_io
 TEST_CLIENT_MANAGER	:= tests/runtime/test_client_manager
+TEST_DUMMY_RESPONSE	:= tests/runtime/test_dummy_response_runtime
 TEST_EVENT_LOOP	:= tests/runtime/test_event_loop
 TEST_CONFIG		:= tests/config/test_config_foundation
 
@@ -65,8 +73,17 @@ $(TEST_LISTENER): tests/runtime/test_listener_manager.cpp $(COMMON_SRCS)
 $(TEST_CLIENT): tests/runtime/test_client_connection.cpp $(SRC_DIR)/runtime/ClientConnection.cpp
 	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_client_connection.cpp $(SRC_DIR)/runtime/ClientConnection.cpp -o $(TEST_CLIENT)
 
+$(TEST_CLIENT_CLEANUP): tests/runtime/test_client_cleanup.cpp $(SRC_DIR)/runtime/ClientConnection.cpp $(SRC_DIR)/runtime/ClientManager.cpp $(SRC_DIR)/runtime/EventLoop.cpp
+	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_client_cleanup.cpp $(SRC_DIR)/runtime/ClientConnection.cpp $(SRC_DIR)/runtime/ClientManager.cpp $(SRC_DIR)/runtime/EventLoop.cpp -o $(TEST_CLIENT_CLEANUP)
+
+$(TEST_CLIENT_IO): tests/runtime/test_client_io.cpp $(SRC_DIR)/runtime/ClientConnection.cpp $(SRC_DIR)/runtime/ClientIo.cpp $(SRC_DIR)/runtime/EventLoop.cpp
+	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_client_io.cpp $(SRC_DIR)/runtime/ClientConnection.cpp $(SRC_DIR)/runtime/ClientIo.cpp $(SRC_DIR)/runtime/EventLoop.cpp -o $(TEST_CLIENT_IO)
+
 $(TEST_CLIENT_MANAGER): tests/runtime/test_client_manager.cpp $(SRC_DIR)/runtime/ClientConnection.cpp $(SRC_DIR)/runtime/ClientManager.cpp $(SRC_DIR)/runtime/EventLoop.cpp
 	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_client_manager.cpp $(SRC_DIR)/runtime/ClientConnection.cpp $(SRC_DIR)/runtime/ClientManager.cpp $(SRC_DIR)/runtime/EventLoop.cpp -o $(TEST_CLIENT_MANAGER)
+
+$(TEST_DUMMY_RESPONSE): tests/runtime/test_dummy_response_runtime.cpp $(COMMON_SRCS)
+	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_dummy_response_runtime.cpp $(COMMON_SRCS) -o $(TEST_DUMMY_RESPONSE)
 
 $(TEST_EVENT_LOOP): tests/runtime/test_event_loop.cpp $(SRC_DIR)/runtime/ClientConnection.cpp $(SRC_DIR)/runtime/EventLoop.cpp
 	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_event_loop.cpp $(SRC_DIR)/runtime/ClientConnection.cpp $(SRC_DIR)/runtime/EventLoop.cpp -o $(TEST_EVENT_LOOP)
@@ -74,10 +91,13 @@ $(TEST_EVENT_LOOP): tests/runtime/test_event_loop.cpp $(SRC_DIR)/runtime/ClientC
 test_config_internal: $(TEST_CONFIG)
 	./$(TEST_CONFIG)
 
-test_runtime_internal: $(TEST_LISTENER) $(TEST_CLIENT) $(TEST_CLIENT_MANAGER) $(TEST_EVENT_LOOP)
+test_runtime_internal: $(TEST_LISTENER) $(TEST_CLIENT) $(TEST_CLIENT_CLEANUP) $(TEST_CLIENT_IO) $(TEST_CLIENT_MANAGER) $(TEST_DUMMY_RESPONSE) $(TEST_EVENT_LOOP)
 	./$(TEST_LISTENER)
 	./$(TEST_CLIENT)
+	./$(TEST_CLIENT_CLEANUP)
+	./$(TEST_CLIENT_IO)
 	./$(TEST_CLIENT_MANAGER)
+	./$(TEST_DUMMY_RESPONSE)
 	./$(TEST_EVENT_LOOP)
 
 test:
@@ -176,7 +196,7 @@ clean:
 	rm -rf $(OBJ_DIR)
 
 fclean: clean
-	rm -f $(NAME) $(TEST_LISTENER) $(TEST_CLIENT) $(TEST_CLIENT_MANAGER) $(TEST_EVENT_LOOP) $(TEST_CONFIG)
+	rm -f $(NAME) $(TEST_LISTENER) $(TEST_CLIENT) $(TEST_CLIENT_CLEANUP) $(TEST_CLIENT_IO) $(TEST_CLIENT_MANAGER) $(TEST_DUMMY_RESPONSE) $(TEST_EVENT_LOOP) $(TEST_CONFIG)
 
 re: fclean all
 
