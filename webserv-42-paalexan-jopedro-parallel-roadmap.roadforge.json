@@ -1,0 +1,1032 @@
+{
+  "schema": "roadforge.roadmap.export",
+  "version": 1,
+  "exportedAt": "2026-05-26T15:06:14.736Z",
+  "roadmap": {
+    "name": "webserv (42) — paalexan + jopedro- parallel roadmap",
+    "saved": false,
+    "id": "rm_KyYOeH6P0_2siw8fzfchPQ",
+    "updatedAt": "2026-05-26T14:42:50.464607Z"
+  },
+  "collaborator": {
+    "role": "owner",
+    "ownerDisplayName": "Alexandre"
+  },
+  "phases": [
+    {
+      "id": "phase-01",
+      "num": "00",
+      "name": "Kickoff, subject checklist, and repo baseline",
+      "color": "#f5853f",
+      "status": "active",
+      "progress": 100,
+      "tasks": [
+        {
+          "id": "WS-101",
+          "title": "Read subject and build the acceptance checklist",
+          "done": true,
+          "next": true,
+          "tags": [
+            "planning",
+            "risk",
+            "mandatory",
+            "subject"
+          ],
+          "assignees": [
+            "Alexandre",
+            "Farreca"
+          ],
+          "deps": [],
+          "est": "0.5 day",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Convert the subject PDF into a strict acceptance checklist: C++98 build, Makefile rules, config file/default path, single poll/equivalent call, non-blocking sockets and CGI pipes, poll monitors read+write, no socket read/write outside readiness, no errno-driven behavior after read/write, GET/POST/DELETE, uploads, CGI, multi-port, accurate status codes, default/custom error pages, browser compatibility, stress tests, and README requirements."
+        },
+        {
+          "id": "WS-102",
+          "title": "Create shared terminology and architecture notes",
+          "done": true,
+          "next": false,
+          "tags": [
+            "planning",
+            "team"
+          ],
+          "assignees": [
+            "Farreca",
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-101"
+          ],
+          "est": "0.5 day",
+          "desc": "Lead: Farreca. Reviewer: Alexandre. Farreca leads. Define the words both of you will use consistently: ServerConfig, RouteConfig, Listener, ClientConnection, RequestParser, ResponseBuilder, CgiProcess, EventLoop, and FileResolver."
+        },
+        {
+          "id": "WS-103",
+          "title": "Repo scaffolding and Makefile baseline",
+          "done": true,
+          "next": false,
+          "tags": [
+            "setup",
+            "makefile",
+            "done-baseline"
+          ],
+          "assignees": [
+            "Alexandre",
+            "Farreca"
+          ],
+          "deps": [
+            "WS-101"
+          ],
+          "est": "0.5 day",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Create include/src/tests/www/configs layout, minimal main(), C++98 build, -Wall -Wextra -Werror -std=c++98, NAME/all/clean/fclean/re targets, no unnecessary relinking, and predictable binary name `webserv`."
+        },
+        {
+          "id": "WS-104",
+          "title": "Define module ownership and review rules",
+          "done": true,
+          "next": false,
+          "tags": [
+            "planning",
+            "team",
+            "pair",
+            "comparison"
+          ],
+          "assignees": [
+            "Alexandre",
+            "Farreca"
+          ],
+          "deps": [
+            "WS-102",
+            "WS-103"
+          ],
+          "est": "0.5 day",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Prepare local NGINX comparison notes plus curl/telnet/manual checks. Use NGINX to compare status/header behavior where useful, but keep your implementation limited to the subject requirements."
+        },
+        {
+          "id": "WS-105",
+          "title": "Set up local NGINX comparison harness",
+          "done": true,
+          "next": false,
+          "tags": [
+            "testing",
+            "nginx",
+            "team"
+          ],
+          "assignees": [
+            "Alexandre",
+            "Farreca"
+          ],
+          "deps": [
+            "WS-101"
+          ],
+          "est": "0.5 day",
+          "desc": "Pair task. Confirmed split: Alexandre/paalexan owns parsing/config/HTTP parsing work. João Farreca/jopedro- owns runtime/sockets/event-loop work. CGI and integration checkpoints are reviewed together because they touch both tracks."
+        },
+        {
+          "id": "WS-106",
+          "title": "Create first valid and invalid config examples",
+          "done": true,
+          "next": false,
+          "tags": [
+            "config",
+            "testing",
+            "config-fixtures"
+          ],
+          "assignees": [
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-102"
+          ],
+          "est": "0.5 day",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Create configs/minimal.conf, configs/multi-port.conf, configs/invalid.conf. These drive config parser and early socket/listener tests."
+        }
+      ]
+    },
+    {
+      "id": "phase-02",
+      "num": "01",
+      "name": "Configuration parser and runtime model",
+      "color": "#5e60ce",
+      "status": "active",
+      "progress": 0,
+      "tasks": [
+        {
+          "id": "WS-201",
+          "title": "Define config grammar and supported directives",
+          "done": false,
+          "next": true,
+          "tags": [
+            "config",
+            "planning",
+            "owner-track:parsing",
+            "next"
+          ],
+          "assignees": [
+            "Alexandre",
+            "Farreca"
+          ],
+          "deps": [
+            "WS-101",
+            "WS-106"
+          ],
+          "est": "1 day",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Write grammar and examples for server blocks and route/location blocks: listen, optional server_name only if you choose virtual hosts, root, index, autoindex, error_page, client_max_body_size, allowed_methods, redirect, upload_dir, and CGI extension mapping."
+        },
+        {
+          "id": "WS-202",
+          "title": "Implement config tokenizer with line/column errors",
+          "done": false,
+          "next": true,
+          "tags": [
+            "config",
+            "parsing",
+            "owner-track:parsing"
+          ],
+          "assignees": [
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-201",
+            "WS-103"
+          ],
+          "est": "1 day",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Tokenize braces, semicolons, identifiers, paths, numbers, and strings. Keep errors useful enough to debug configs during evaluation."
+        },
+        {
+          "id": "WS-203",
+          "title": "Implement parser to ServerConfig and RouteConfig objects",
+          "done": false,
+          "next": false,
+          "tags": [
+            "config",
+            "parsing",
+            "owner-track:parsing"
+          ],
+          "assignees": [
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-202"
+          ],
+          "est": "1.5 days",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Parse tokens into typed config objects. Reject duplicate/invalid directives, invalid methods, missing roots, invalid upload directories, and malformed redirects."
+        },
+        {
+          "id": "WS-204",
+          "title": "Implement config validation and defaults",
+          "done": false,
+          "next": false,
+          "tags": [
+            "config",
+            "validation",
+            "owner-track:parsing"
+          ],
+          "assignees": [
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-203"
+          ],
+          "est": "1 day",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Apply defaults and validate final config. Ensure error pages, max body size, route roots, methods, CGI paths, and listen endpoints are usable before the server starts."
+        },
+        {
+          "id": "WS-205",
+          "title": "Implement route resolution by host, port, and longest path prefix",
+          "done": false,
+          "next": false,
+          "tags": [
+            "routing",
+            "config",
+            "owner-track:parsing",
+            "contract"
+          ],
+          "assignees": [
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-204"
+          ],
+          "est": "1 day",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Return the effective server and route config for a listener/Host/path. No regex. Longest matching route prefix wins."
+        },
+        {
+          "id": "WS-206",
+          "title": "Config unit tests and parser fixtures",
+          "done": false,
+          "next": false,
+          "tags": [
+            "tests",
+            "config",
+            "owner-track:parsing"
+          ],
+          "assignees": [
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-205"
+          ],
+          "est": "1 day",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Create fixtures for valid/invalid configs and expected parsed models. Include duplicate directives, bad methods, bad braces, missing semicolon, and route precedence cases."
+        },
+        {
+          "id": "WS-207",
+          "title": "Define shared stub config interface for Farreca's runtime track",
+          "done": false,
+          "next": true,
+          "tags": [
+            "config",
+            "contract",
+            "parallel",
+            "owner-track:parsing"
+          ],
+          "assignees": [
+            "Alexandre",
+            "Farreca"
+          ],
+          "deps": [
+            "WS-201"
+          ],
+          "est": "0.5 day",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Provide a small stable interface or fixture returning listener endpoints and route basics so Farreca can build sockets/event-loop without waiting for the full parser."
+        }
+      ]
+    },
+    {
+      "id": "phase-03",
+      "num": "02",
+      "name": "Sockets and one-poll event loop",
+      "color": "#2a9d8f",
+      "status": "active",
+      "progress": 100,
+      "tasks": [
+        {
+          "id": "WS-301",
+          "title": "Implement listener socket creation for all configured endpoints",
+          "done": true,
+          "next": false,
+          "tags": [
+            "network",
+            "socket",
+            "owner-track:runtime",
+            "parallel"
+          ],
+          "assignees": [
+            "Farreca",
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-102",
+            "WS-103",
+            "WS-201"
+          ],
+          "est": "1 day",
+          "desc": "Lead: Farreca. Reviewer: Alexandre. Create, bind, listen, set SO_REUSEADDR where appropriate, set non-blocking mode, and register each listener in the event loop. Use the parsed config contract once WS-205 is ready; until then use a small temporary ListenerConfig stub."
+        },
+        {
+          "id": "WS-302",
+          "title": "Design ClientConnection state machine",
+          "done": true,
+          "next": false,
+          "tags": [
+            "network",
+            "design",
+            "owner-track:runtime"
+          ],
+          "assignees": [
+            "Farreca"
+          ],
+          "deps": [
+            "WS-301"
+          ],
+          "est": "0.5 day",
+          "desc": "Lead: Farreca. Reviewer: Alexandre. Define states: READING_HEADERS, READING_BODY, PROCESSING, CGI_RUNNING, WRITING_RESPONSE, CLOSING. Include buffers, timestamps, request/response ownership, and close reasons."
+        },
+        {
+          "id": "WS-303",
+          "title": "Implement single poll/equivalent event loop",
+          "done": true,
+          "next": false,
+          "tags": [
+            "network",
+            "io",
+            "risk",
+            "owner-track:runtime",
+            "grade-risk"
+          ],
+          "assignees": [
+            "Farreca"
+          ],
+          "deps": [
+            "WS-302"
+          ],
+          "est": "2 days",
+          "desc": "Lead: Farreca. Reviewer: Alexandre. Use one poll/equivalent call to handle listener sockets, client sockets, and later CGI pipes. poll must monitor reading and writing simultaneously. Never read/write an FD unless the poll result says it is ready. Do not use errno after read/write to decide server behavior."
+        },
+        {
+          "id": "WS-304",
+          "title": "Accept clients and register non-blocking connections",
+          "done": true,
+          "next": false,
+          "tags": [
+            "network",
+            "owner-track:runtime"
+          ],
+          "assignees": [
+            "Farreca"
+          ],
+          "deps": [
+            "WS-303"
+          ],
+          "est": "1 day",
+          "desc": "Lead: Farreca. Reviewer: Alexandre. Accept all pending clients from ready listener sockets, set them non-blocking, create ClientConnection state, and add them to the poll set."
+        },
+        {
+          "id": "WS-305",
+          "title": "Implement read/write buffer mechanics",
+          "done": true,
+          "next": false,
+          "tags": [
+            "network",
+            "io",
+            "owner-track:runtime"
+          ],
+          "assignees": [
+            "Farreca"
+          ],
+          "deps": [
+            "WS-303"
+          ],
+          "est": "1 day",
+          "desc": "Lead: Farreca. Reviewer: Alexandre. Support partial reads and partial writes without blocking. Preserve unread bytes and unsent response bytes correctly."
+        },
+        {
+          "id": "WS-306",
+          "title": "Timeouts, cleanup, and FD-leak protection",
+          "done": true,
+          "next": false,
+          "tags": [
+            "network",
+            "risk",
+            "owner-track:runtime",
+            "grade-risk"
+          ],
+          "assignees": [
+            "Farreca"
+          ],
+          "deps": [
+            "WS-304",
+            "WS-305"
+          ],
+          "est": "1 day",
+          "desc": "Lead: Farreca. Reviewer: Alexandre. Close idle/stuck clients predictably so requests never hang indefinitely. Ensure disconnects, bad requests, write errors, and timeouts do not leak FDs or crash the server."
+        },
+        {
+          "id": "WS-307",
+          "title": "Runtime dummy response integration test",
+          "done": true,
+          "next": false,
+          "tags": [
+            "network",
+            "integration",
+            "parallel",
+            "owner-track:runtime"
+          ],
+          "assignees": [
+            "Farreca"
+          ],
+          "deps": [
+            "WS-302",
+            "WS-207"
+          ],
+          "est": "0.5 day",
+          "desc": "Lead: Farreca. Reviewer: Alexandre. Before full HTTP is ready, accept a connection and return a fixed valid HTTP response through the same write buffer path. This proves listener/client lifecycle independently from parsing."
+        }
+      ]
+    },
+    {
+      "id": "phase-04",
+      "num": "03",
+      "name": "HTTP parser, routing, and static responses",
+      "color": "#4361ee",
+      "status": "future",
+      "progress": 0,
+      "tasks": [
+        {
+          "id": "WS-401",
+          "title": "Incremental HTTP request line and headers parser",
+          "done": false,
+          "next": false,
+          "tags": [
+            "http",
+            "parsing",
+            "risk",
+            "owner-track:parsing"
+          ],
+          "assignees": [
+            "Alexandre",
+            "Farreca"
+          ],
+          "deps": [
+            "WS-305"
+          ],
+          "est": "2 days",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Parse request line and headers incrementally from a byte stream. Handle partial reads, malformed requests, header size limits, method, target, version, and normalized header lookup."
+        },
+        {
+          "id": "WS-402",
+          "title": "Implement body reader for Content-Length and chunked requests",
+          "done": false,
+          "next": false,
+          "tags": [
+            "http",
+            "body",
+            "risk",
+            "owner-track:parsing",
+            "grade-risk"
+          ],
+          "assignees": [
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-401",
+            "WS-306"
+          ],
+          "est": "2 days",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Read request bodies with Content-Length and Transfer-Encoding: chunked. Enforce client_max_body_size and return the right error when the body is too large or malformed. Produce an already-unchunked body for CGI."
+        },
+        {
+          "id": "WS-403",
+          "title": "Map HTTP requests to effective route and filesystem path",
+          "done": false,
+          "next": false,
+          "tags": [
+            "routing",
+            "fs",
+            "owner-track:parsing"
+          ],
+          "assignees": [
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-205",
+            "WS-401"
+          ],
+          "est": "1 day",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Use listener + Host + request path to choose a server/route. Build safe filesystem paths and prevent accidental path traversal."
+        },
+        {
+          "id": "WS-404",
+          "title": "Static GET responses: files, index, and autoindex",
+          "done": false,
+          "next": false,
+          "tags": [
+            "http",
+            "fs",
+            "owner-track:runtime"
+          ],
+          "assignees": [
+            "Farreca",
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-403"
+          ],
+          "est": "2 days",
+          "desc": "Lead: Farreca. Reviewer: Alexandre. Serve static files using Alexandre's route/filesystem mapping contract. If path is a directory, serve configured index, autoindex if enabled, or an error response if forbidden/missing."
+        },
+        {
+          "id": "WS-405",
+          "title": "Response builder and error page handling",
+          "done": false,
+          "next": false,
+          "tags": [
+            "http",
+            "responses",
+            "integration"
+          ],
+          "assignees": [
+            "Farreca",
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-404"
+          ],
+          "est": "1.5 days",
+          "desc": "Lead: Farreca. Reviewer: Alexandre. Generate status line, headers, Content-Length where possible, Connection behavior, default error pages, and configured custom error pages. Alexandre validates parser/routing assumptions."
+        },
+        {
+          "id": "WS-406",
+          "title": "Method gating and redirects",
+          "done": false,
+          "next": false,
+          "tags": [
+            "routing",
+            "http",
+            "owner-track:parsing"
+          ],
+          "assignees": [
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-403",
+            "WS-405"
+          ],
+          "est": "1 day",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Reject unsupported methods with 405 and implement configured redirects before static/CGI handling."
+        },
+        {
+          "id": "WS-407",
+          "title": "First browser/curl static server demo",
+          "done": false,
+          "next": false,
+          "tags": [
+            "demo",
+            "testing",
+            "pair",
+            "checkpoint"
+          ],
+          "assignees": [
+            "Alexandre",
+            "Farreca"
+          ],
+          "deps": [
+            "WS-401",
+            "WS-404",
+            "WS-405"
+          ],
+          "est": "0.5 day",
+          "desc": "Lead: Pair. Reviewer: Pair. Pair checkpoint. Run the server with a static config, open a browser, run curl checks, and compare basic behavior with NGINX notes."
+        },
+        {
+          "id": "WS-408",
+          "title": "HTTP parser standalone fixture tests",
+          "done": false,
+          "next": false,
+          "tags": [
+            "http",
+            "parsing",
+            "testing",
+            "owner-track:parsing"
+          ],
+          "assignees": [
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-401"
+          ],
+          "est": "0.5 day",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Test partial headers, malformed request lines, oversized headers, Content-Length bodies, and chunked bodies without needing live sockets."
+        }
+      ]
+    },
+    {
+      "id": "phase-05",
+      "num": "04",
+      "name": "Uploads, DELETE, and CGI",
+      "color": "#ff006e",
+      "status": "future",
+      "progress": 0,
+      "tasks": [
+        {
+          "id": "WS-501",
+          "title": "POST upload handler",
+          "done": false,
+          "next": false,
+          "tags": [
+            "http",
+            "upload",
+            "fs",
+            "integration"
+          ],
+          "assignees": [
+            "Farreca",
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-402",
+            "WS-403"
+          ],
+          "est": "2 days",
+          "desc": "Lead: Farreca. Reviewer: Alexandre. Implement route-controlled uploads into configured directories using Alexandre's parsed body + route metadata. Decide filename strategy, permissions, overwrite policy, and response status."
+        },
+        {
+          "id": "WS-502",
+          "title": "DELETE handler",
+          "done": false,
+          "next": false,
+          "tags": [
+            "http",
+            "fs"
+          ],
+          "assignees": [
+            "Farreca"
+          ],
+          "deps": [
+            "WS-403",
+            "WS-406"
+          ],
+          "est": "1 day",
+          "desc": "Lead: Farreca. Reviewer: Alexandre. Delete mapped resources only where route config allows it. Return predictable 204/200/403/404/405 responses."
+        },
+        {
+          "id": "WS-503",
+          "title": "CGI execution design",
+          "done": false,
+          "next": false,
+          "tags": [
+            "cgi",
+            "planning",
+            "risk",
+            "pair",
+            "design",
+            "grade-risk"
+          ],
+          "assignees": [
+            "Alexandre",
+            "Farreca"
+          ],
+          "deps": [
+            "WS-402",
+            "WS-403",
+            "WS-303"
+          ],
+          "est": "0.5 day",
+          "desc": "Pair design checkpoint. Alexandre defines CGI trigger parsing, env variables, request/body semantics, and output parsing contract. Farreca defines process lifecycle, stdin/stdout pipe ownership, timeout policy, and one-poll integration."
+        },
+        {
+          "id": "WS-504",
+          "title": "Implement CGI fork/execve, env, and pipes",
+          "done": false,
+          "next": false,
+          "tags": [
+            "cgi",
+            "process",
+            "risk",
+            "grade-risk"
+          ],
+          "assignees": [
+            "Farreca",
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-503"
+          ],
+          "est": "2 days",
+          "desc": "Lead: Farreca. Reviewer: Alexandre. Create child process only for CGI, set environment from Alexandre's request model, connect request body to stdin and stdout/stderr to pipes, handle exec errors, and avoid blocking."
+        },
+        {
+          "id": "WS-505",
+          "title": "Integrate CGI I/O with one-poll event loop",
+          "done": false,
+          "next": false,
+          "tags": [
+            "cgi",
+            "io",
+            "risk",
+            "grade-risk"
+          ],
+          "assignees": [
+            "Farreca"
+          ],
+          "deps": [
+            "WS-504"
+          ],
+          "est": "2 days",
+          "desc": "Lead: Farreca. Reviewer: Alexandre. Register CGI pipe FDs in the same poll/equivalent loop. Drive reads/writes only on readiness and enforce CGI timeouts."
+        },
+        {
+          "id": "WS-506",
+          "title": "Parse CGI output into HTTP response",
+          "done": false,
+          "next": false,
+          "tags": [
+            "cgi",
+            "http",
+            "owner-track:parsing"
+          ],
+          "assignees": [
+            "Alexandre",
+            "Farreca"
+          ],
+          "deps": [
+            "WS-504"
+          ],
+          "est": "1.5 days",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Parse CGI headers/body, status handling, Content-Type, missing Content-Length behavior, EOF-as-end behavior, and malformed CGI output fallback."
+        },
+        {
+          "id": "WS-507",
+          "title": "CGI demo scripts and config",
+          "done": false,
+          "next": false,
+          "tags": [
+            "cgi",
+            "demo"
+          ],
+          "assignees": [
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-506"
+          ],
+          "est": "0.5 day",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Add at least one simple Python or shell CGI demo that reads input and returns dynamic content. Keep it evaluation-friendly."
+        }
+      ]
+    },
+    {
+      "id": "phase-06",
+      "num": "05",
+      "name": "Testing, stress, docs, and evaluation readiness",
+      "color": "#8338ec",
+      "status": "future",
+      "progress": 0,
+      "tasks": [
+        {
+          "id": "WS-601",
+          "title": "curl acceptance suite for required HTTP behavior",
+          "done": false,
+          "next": false,
+          "tags": [
+            "testing",
+            "curl",
+            "acceptance"
+          ],
+          "assignees": [
+            "Alexandre",
+            "Farreca"
+          ],
+          "deps": [
+            "WS-405",
+            "WS-406",
+            "WS-501",
+            "WS-502"
+          ],
+          "est": "1 day",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Create scripts for GET/POST/DELETE, status codes, redirects, custom/default errors, directory behavior, uploads, delete, max body size, and route method gating."
+        },
+        {
+          "id": "WS-602",
+          "title": "Parser and config unit tests",
+          "done": false,
+          "next": false,
+          "tags": [
+            "testing",
+            "unit",
+            "owner-track:parsing"
+          ],
+          "assignees": [
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-206",
+            "WS-401",
+            "WS-402"
+          ],
+          "est": "1 day",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Add lightweight unit tests for config parsing, route matching, HTTP parser edge cases, chunked decoding, and body-size enforcement."
+        },
+        {
+          "id": "WS-603",
+          "title": "Network stress tests",
+          "done": false,
+          "next": false,
+          "tags": [
+            "testing",
+            "stress",
+            "risk",
+            "owner-track:runtime"
+          ],
+          "assignees": [
+            "Farreca",
+            "Alexandre"
+          ],
+          "deps": [
+            "WS-303",
+            "WS-306",
+            "WS-501",
+            "WS-505"
+          ],
+          "est": "1 day",
+          "desc": "Lead: Farreca. Reviewer: Alexandre. Run scripts that open many connections, disconnect mid-request, send slow headers/bodies, perform partial writes, and test large uploads. Verify no crashes, hangs, or FD leaks."
+        },
+        {
+          "id": "WS-604",
+          "title": "Browser compatibility smoke tests",
+          "done": false,
+          "next": false,
+          "tags": [
+            "testing",
+            "browser",
+            "pair"
+          ],
+          "assignees": [
+            "Alexandre",
+            "Farreca"
+          ],
+          "deps": [
+            "WS-404",
+            "WS-405",
+            "WS-507"
+          ],
+          "est": "0.5 day",
+          "desc": "Lead: Pair. Reviewer: Pair. Pair test. Verify static pages, links, assets, error pages, upload forms, and CGI demos in a browser."
+        },
+        {
+          "id": "WS-605",
+          "title": "Evaluation demo config pack and walkthrough",
+          "done": false,
+          "next": false,
+          "tags": [
+            "eval",
+            "demo"
+          ],
+          "assignees": [
+            "Alexandre",
+            "Farreca"
+          ],
+          "deps": [
+            "WS-205",
+            "WS-507",
+            "WS-601"
+          ],
+          "est": "0.5 day",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Prepare 2–3 configs demonstrating multi-port, server_name, per-route rules, uploads, delete, redirects, custom errors, autoindex, and CGI. Write a short demo script."
+        },
+        {
+          "id": "WS-606",
+          "title": "README.md and subject-required documentation",
+          "done": false,
+          "next": false,
+          "tags": [
+            "docs",
+            "mandatory"
+          ],
+          "assignees": [
+            "Alexandre",
+            "Farreca"
+          ],
+          "deps": [
+            "WS-104",
+            "WS-601"
+          ],
+          "est": "0.5 day",
+          "desc": "Lead: Alexandre. Reviewer: Farreca. Write English README with the required first italic line, Description, Instructions, Resources, architecture notes, test commands, and a clear note on how AI was used."
+        },
+        {
+          "id": "WS-607",
+          "title": "Valgrind/leak and norm/evaluation cleanup pass",
+          "done": false,
+          "next": false,
+          "tags": [
+            "quality",
+            "eval",
+            "pair"
+          ],
+          "assignees": [
+            "Alexandre",
+            "Farreca"
+          ],
+          "deps": [
+            "WS-603",
+            "WS-606"
+          ],
+          "est": "1 day",
+          "desc": "Lead: Pair. Reviewer: Pair. Final pair pass. Run leak checks, crash checks, warning checks, clean rebuild, remove debug prints, review forbidden functions, and prepare defense explanation."
+        }
+      ]
+    },
+    {
+      "id": "phase-07",
+      "num": "06",
+      "name": "Parallel work plan and checkpoints",
+      "color": "#38bdf8",
+      "status": "future",
+      "progress": 0,
+      "tasks": [
+        {
+          "id": "WS-701",
+          "title": "Week 1 checkpoint: config + event-loop skeleton compile together",
+          "done": false,
+          "next": false,
+          "tags": [
+            "checkpoint",
+            "pair"
+          ],
+          "assignees": [
+            "Alexandre",
+            "Farreca"
+          ],
+          "deps": [
+            "WS-203",
+            "WS-303"
+          ],
+          "est": "0.5 day",
+          "desc": "Lead: Pair. Reviewer: Pair. Both branches integrate. A config file can create listener sockets and the server can accept connections without serving full HTTP yet."
+        },
+        {
+          "id": "WS-702",
+          "title": "Week 2 checkpoint: static GET demo",
+          "done": false,
+          "next": false,
+          "tags": [
+            "checkpoint",
+            "pair"
+          ],
+          "assignees": [
+            "Alexandre",
+            "Farreca"
+          ],
+          "deps": [
+            "WS-407"
+          ],
+          "est": "0.5 day",
+          "desc": "Lead: Pair. Reviewer: Pair. Browser and curl can fetch static files, directories behave correctly, and custom/default error pages work."
+        },
+        {
+          "id": "WS-703",
+          "title": "Week 3 checkpoint: upload/delete/CGI demo",
+          "done": false,
+          "next": false,
+          "tags": [
+            "checkpoint",
+            "pair"
+          ],
+          "assignees": [
+            "Alexandre",
+            "Farreca"
+          ],
+          "deps": [
+            "WS-501",
+            "WS-502",
+            "WS-507"
+          ],
+          "est": "0.5 day",
+          "desc": "Lead: Pair. Reviewer: Pair. Demo config proves upload, delete, and one CGI route. Stress and leak testing can start."
+        },
+        {
+          "id": "WS-704",
+          "title": "Final checkpoint: evaluation script rehearsal",
+          "done": false,
+          "next": false,
+          "tags": [
+            "checkpoint",
+            "eval",
+            "pair"
+          ],
+          "assignees": [
+            "Alexandre",
+            "Farreca"
+          ],
+          "deps": [
+            "WS-605",
+            "WS-607"
+          ],
+          "est": "0.5 day",
+          "desc": "Lead: Pair. Reviewer: Pair. Run the project as if in evaluation. One person operates, the other asks questions. Swap roles and verify both can explain architecture and tradeoffs."
+        }
+      ]
+    }
+  ]
+}
