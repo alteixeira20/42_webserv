@@ -134,20 +134,25 @@ void	ConfigParser::parseClientMaxBodySize(ServerConfig &server)
 */
 void	ConfigParser::parseErrorPage(ServerConfig &server)
 {
-	std::vector<unsigned int>	statuses;
-	ConfigToken					token;
-	std::string					path;
+	std::vector<unsigned int>			statuses;
+	std::vector<ConfigToken>			values;
+	std::vector<ConfigToken>::size_type	index;
+	std::string						path;
 
-	token = expectWord(ConfigParserErrors::EXPECTED_ERROR_STATUS);
+	values.push_back(expectWord(ConfigParserErrors::EXPECTED_ERROR_STATUS));
 	while (!check(CONFIG_TOKEN_SEMICOLON))
+		values.push_back(expectWord(ConfigParserErrors::EXPECTED_ERROR_PAGE_PATH));
+	if (values.size() < 2)
+		throw (ConfigException(ConfigParserErrors::EXPECTED_ERROR_PAGE_PATH,
+				current().getLine(), current().getColumn()));
+	index = 0;
+	while (index + 1 < values.size())
 	{
-		statuses.push_back(parseStatusCode(token.getValue(), token));
-		token = expectWord(ConfigParserErrors::EXPECTED_ERROR_PAGE_PATH);
+		statuses.push_back(parseStatusCode(values[index].getValue(),
+				values[index]));
+		++index;
 	}
-	if (statuses.empty())
-		throw (ConfigException(ConfigParserErrors::EXPECTED_ERROR_STATUS,
-				token.getLine(), token.getColumn()));
-	path = token.getValue();
+	path = values[values.size() - 1].getValue();
 	addErrorPages(server, statuses, path);
 	expect(CONFIG_TOKEN_SEMICOLON,
 		ConfigParserErrors::EXPECTED_DIRECTIVE_SEMICOLON);

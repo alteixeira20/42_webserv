@@ -2,20 +2,33 @@
 
 Status: Implemented
 
-This directory stores config fixtures for upcoming semantic parser tests.
-It also contains active C++ tests for implemented config/parser/model
-foundation behavior.
+This directory contains active C++ tests and fixtures for the implemented config
+parser, validator, and resolver.
 
-Current parser status:
+Current coverage in `test_config_foundation.cpp`:
 
-- `ConfigTokenizer` exists.
-- `ConfigParser` wires file content through tokenization into parser state.
-- Full semantic parsing into `ServerConfig`, `RouteConfig`, and `ListenConfig`
-  is not implemented yet.
+- config model value objects and tokenizer basics;
+- semantic parser output for `Config`, `ServerConfig`, `ListenConfig`, and
+  `RouteConfig`;
+- valid `listen` values, server directives, multi-status `error_page`, and
+  `location` blocks;
+- route directives: `root`, `index`, `autoindex`, `allowed_methods`,
+  `redirect`, `upload_dir`, and `cgi`;
+- parser rejections for invalid listens, ports, methods, booleans, redirect
+  statuses, and body sizes;
+- validator rejections for empty configs, missing listen directives, duplicate
+  listens, duplicate default servers, duplicate server names, duplicate route
+  paths, and non-absolute route paths;
+- resolver selection for server_name matches, endpoint defaults, longest route
+  prefix, and segment-boundary behavior.
 
-Active tests:
+Fixtures:
 
-- `test_config_foundation.cpp`
+- `valid_minimal.conf`: smallest valid server config.
+- `valid_comments.conf`: valid config with comments and whitespace.
+- `valid_full.conf`: valid config covering implemented directives.
+- `invalid_missing_semicolon.conf`: syntax error fixture.
+- `invalid_route_path.conf`: semantic route path error fixture.
 
 Run with:
 
@@ -26,18 +39,7 @@ python3 tests/run.py config
 or:
 
 ```sh
-make test_config
+make test_config_internal
 ```
 
-Status: Planned
-
-Future config coverage:
-
-- multiple ports;
-- multiple hostnames;
-- error pages;
-- body-size limits;
-- routes;
-- index behavior;
-- allowed methods;
-- invalid syntax and invalid directive scope.
+Use `python3 tests/run.py all --no-color` for the full active suite.

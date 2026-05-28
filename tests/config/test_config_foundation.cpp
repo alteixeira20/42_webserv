@@ -1,15 +1,20 @@
 #include "config/Config.hpp"
 #include "config/ConfigException.hpp"
 #include "config/ConfigParser.hpp"
+#include "config/ConfigParserErrors.hpp"
+#include "config/ConfigResolver.hpp"
 #include "config/ConfigToken.hpp"
 #include "config/ConfigTokenizer.hpp"
+#include "config/ConfigValidationErrors.hpp"
 #include "config/ListenConfig.hpp"
 #include "config/RouteConfig.hpp"
 #include "config/ServerConfig.hpp"
 #include "http/HttpMethod.hpp"
 
+#include <cstddef>
 #include <exception>
 #include <iostream>
+#include <map>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -33,6 +38,52 @@ static void	assert_uint(unsigned int actual, unsigned int expected,
 {
 	if (actual != expected)
 		throw std::runtime_error(message);
+}
+
+static void	assert_size(std::size_t actual, std::size_t expected,
+	const std::string &message)
+{
+	if (actual != expected)
+		throw std::runtime_error(message);
+}
+
+static Config	parse_config(const std::string &content)
+{
+	ConfigParser	parser;
+
+	return (parser.parseString(content));
+}
+
+static void	expect_config_error(const std::string &content,
+	const std::string &message)
+{
+	try
+	{
+		parse_config(content);
+	}
+	catch (const ConfigException &error)
+	{
+		assert_string(error.what(), message, "config error message");
+		return ;
+	}
+	throw std::runtime_error("expected config parse failure: " + message);
+}
+
+static void	expect_file_error(const std::string &path,
+	const std::string &message)
+{
+	ConfigParser	parser;
+
+	try
+	{
+		parser.parseFile(path);
+	}
+	catch (const ConfigException &error)
+	{
+		assert_string(error.what(), message, "file error message");
+		return ;
+	}
+	throw std::runtime_error("expected config file failure: " + message);
 }
 
 static void	test_http_methods(void)
@@ -205,10 +256,10 @@ static void	test_server_config(void)
 	server.addErrorPage(404, "/errors/404.html");
 	route.setPath("/");
 	server.addRoute(route);
-	assert_true(server.getListens().size() == 2,
-		"duplicate listens should be ignored");
+	assert_true(server.getListens().size() == 3,
+		"duplicate listens should be preserved for validation");
 	assert_true(server.getServerNames().size() == 2,
-		"duplicate server names should be ignored");
+		"duplicate server names should be ignored in one server object");
 	assert_string(server.getIndex(), "index.html",
 		"default index should match current code");
 	assert_true(server.getClientMaxBodySize() == 1000000,
@@ -237,27 +288,178 @@ static void	test_config_unique_listens(void)
 		"unique listens should deduplicate across servers");
 }
 
-static void	test_config_parser_foundation(void)
+static void	test_parser_listen_values(void)
+{
+	Config config;
+	const ServerConfig *server;
+
+	config = parse_config("server { listen 8080; }\n");
+	server = &config.getServers()[0];
+	assert_size(config.getServers().size(), 1, "one server should parse");
+	assert_size(server->getListens().size(), 1, "one listen should parse");
+	assert_string(server->getListens()[0].getHost(), "0.0.0.0",
+		"port-only listen should use wildcard host");
+	assert_uint(server->getListens()[0].getPort(), 8080,
+		"listen port should parse");
+	config = parse_config("server { listen 127.0.0.1:9090; }\n");
+	server = &config.getServers()[0];
+	assert_string(server->getListens()[0].getHost(), "127.0.0.1",
+		"host:port listen should parse host");
+	assert_uint(server->getListens()[0].getPort(), 9090,
+		"host:port listen should parse port");
+}
+
+static void	test_parser_server_directives(void)
 {
 	ConfigParser parser;
-	Config config = parser.parseString("server { listen 8080; }");
+	Config config = parser.parseFile("tests/config/fixtures/valid_full.conf");
+	const ServerConfig &server = config.getServers()[0];
+	ServerConfig::ErrorPageMap errors = server.getErrorPages();
 
-	assert_true(config.getServers().empty(),
-		"semantic parsing is not implemented, config should remain empty");
-	config = parser.parseFile("tests/config/fixtures/valid_minimal.conf");
-	assert_true(config.getServers().empty(),
-		"parseFile should run pipeline without semantic server output yet");
+	assert_size(config.getServers().size(), 1, "fixture should parse one server");
+	assert_size(server.getServerNames().size(), 2,
+		"server_name should parse multiple names");
+	assert_string(server.getServerNames()[0], "localhost",
+		"first server_name should match");
+	assert_string(server.getRoot(), "www", "server root should parse");
+	assert_string(server.getIndex(), "home.html", "server index should parse");
+	assert_true(server.getClientMaxBodySize() == 2048,
+		"client_max_body_size should parse");
+	assert_string(errors.find(404)->second, "www/errors/4xx.html",
+		"multi-status error_page should map 404");
+	assert_string(errors.find(403)->second, "www/errors/4xx.html",
+		"multi-status error_page should map 403");
+	assert_string(errors.find(500)->second, "www/errors/5xx.html",
+		"single error_page should map 500");
+}
+
+static void	test_parser_route_directives(void)
+{
+	ConfigParser parser;
+	Config config = parser.parseFile("tests/config/fixtures/valid_full.conf");
+	const ServerConfig &server = config.getServers()[0];
+	const RouteConfig &root = server.getRoutes()[0];
+	const RouteConfig &upload = server.getRoutes()[1];
+	const RouteConfig &old = server.getRoutes()[2];
+	const RouteConfig &cgi = server.getRoutes()[3];
+
+	assert_size(server.getRoutes().size(), 4, "location blocks should parse");
+	assert_string(root.getPath(), "/", "root route path should parse");
+	assert_true(root.hasRoot(), "route root should be present");
+	assert_string(root.getRoot(), "www/root", "route root should parse");
+	assert_true(root.hasIndex(), "route index should be present");
+	assert_string(root.getIndex(), "index.html", "route index should parse");
+	assert_true(root.hasAutoIndex(), "route autoindex should be present");
+	assert_true(!root.getAutoIndex(), "route autoindex off should parse");
+	assert_size(root.getAllowedMethods().size(), 2,
+		"allowed_methods should parse and deduplicate");
+	assert_true(containsHttpMethod(root.getAllowedMethods(), HTTP_METHOD_GET),
+		"allowed_methods should contain GET");
+	assert_string(upload.getUploadDir(), "uploads", "upload_dir should parse");
+	assert_true(upload.getAutoIndex(), "autoindex on should parse");
+	assert_uint(old.getRedirectStatus(), 301, "redirect status should parse");
+	assert_string(old.getRedirectTarget(), "/", "redirect target should parse");
+	assert_string(cgi.getCgiMap().find(".py")->second, "/usr/bin/python3",
+		"cgi directive should parse");
+}
+
+static void	test_parser_rejections(void)
+{
+	expect_config_error("", ConfigValidationErrors::EMPTY_CONFIG);
+	expect_config_error("server { root www; }",
+		ConfigValidationErrors::SERVER_WITHOUT_LISTEN);
+	expect_config_error("server { listen :8080; }",
+		ConfigParserErrors::INVALID_LISTEN_VALUE);
+	expect_config_error("server { listen 0; }",
+		ConfigParserErrors::INVALID_LISTEN_PORT);
+	expect_config_error("server { listen 65536; }",
+		ConfigParserErrors::INVALID_LISTEN_PORT);
+	expect_config_error("server { listen abc; }",
+		ConfigParserErrors::INVALID_LISTEN_PORT);
+	expect_config_error("server { listen 8080; client_max_body_size 0; }",
+		ConfigParserErrors::INVALID_BODY_SIZE);
+}
+
+static void	test_route_rejections(void)
+{
+	expect_config_error(
+		"server { listen 8080; location / { allowed_methods PATCH; } }",
+		ConfigParserErrors::INVALID_ALLOWED_METHOD);
+	expect_config_error(
+		"server { listen 8080; location / { autoindex maybe; } }",
+		ConfigParserErrors::INVALID_BOOLEAN_VALUE);
+	expect_config_error(
+		"server { listen 8080; location /old { redirect 200 /; } }",
+		ConfigParserErrors::INVALID_REDIRECT_STATUS);
+	expect_config_error(
+		"server { listen 8080; location /a {} location /a {} }",
+		ConfigValidationErrors::DUPLICATE_ROUTE_PATH);
+	expect_config_error("server { listen 8080; location img {} }",
+		ConfigValidationErrors::INVALID_ROUTE_PATH);
+}
+
+static void	test_virtual_host_validation(void)
+{
+	parse_config("server { listen 8080; server_name one.test; }\n"
+		"server { listen 8080; server_name two.test; }\n");
+	expect_config_error("server { listen 8080; listen 8080; }",
+		ConfigValidationErrors::DUPLICATE_LISTEN_IN_SERVER);
+	expect_config_error("server { listen 8080; }\nserver { listen 8080; }\n",
+		ConfigValidationErrors::DUPLICATE_DEFAULT_SERVER);
+	expect_config_error(
+		"server { listen 8080; server_name same.test; }\n"
+		"server { listen 8080; server_name same.test; }\n",
+		ConfigValidationErrors::DUPLICATE_SERVER_NAME);
+}
+
+static void	test_config_parser_files(void)
+{
+	ConfigParser parser;
+	Config config = parser.parseFile("tests/config/fixtures/valid_minimal.conf");
+
+	assert_size(config.getServers().size(), 1,
+		"parseFile should return semantic server output");
+	parser.parseFile("tests/config/fixtures/valid_comments.conf");
+	expect_file_error("tests/config/fixtures/does_not_exist.conf",
+		ConfigParserErrors::COULD_NOT_OPEN_FILE);
 	try
 	{
-		parser.parseFile("tests/config/fixtures/does_not_exist.conf");
+		parser.parseFile("tests/config/fixtures/invalid_missing_semicolon.conf");
 	}
 	catch (const ConfigException &error)
 	{
-		assert_string(error.what(), "could not open config file",
-			"missing file should throw ConfigException");
+		assert_string(error.what(), ConfigParserErrors::EXPECTED_DIRECTIVE_SEMICOLON,
+			"missing semicolon fixture should fail");
 		return ;
 	}
-	throw std::runtime_error("missing config file should throw ConfigException");
+	throw std::runtime_error("invalid_missing_semicolon should fail");
+}
+
+static void	test_config_resolver(void)
+{
+	Config config = parse_config(
+		"server { listen 127.0.0.1:8080; location / {} "
+		"location /img {} location /img/icons {} }\n"
+		"server { listen 127.0.0.1:8080; server_name named.test; "
+		"location /named {} }\n");
+	ConfigResolver resolver;
+	ListenConfig endpoint("127.0.0.1", 8080);
+	const ServerConfig *defaultServer;
+	const ServerConfig *namedServer;
+	const RouteConfig *route;
+
+	defaultServer = resolver.findServer(config, endpoint, "unknown.test");
+	namedServer = resolver.findServer(config, endpoint, "named.test");
+	assert_true(defaultServer == &config.getServers()[0],
+		"first server on endpoint should be default");
+	assert_true(namedServer == &config.getServers()[1],
+		"server_name match should win");
+	route = resolver.findRoute(*defaultServer, "/img/icons/logo.png");
+	assert_string(route->getPath(), "/img/icons",
+		"longest route prefix should win");
+	route = resolver.findRoute(*defaultServer, "/img2/logo.png");
+	assert_string(route->getPath(), "/",
+		"route prefix should respect segment boundary");
 }
 
 int	main(void)
@@ -272,7 +474,14 @@ int	main(void)
 		test_route_config();
 		test_server_config();
 		test_config_unique_listens();
-		test_config_parser_foundation();
+		test_parser_listen_values();
+		test_parser_server_directives();
+		test_parser_route_directives();
+		test_parser_rejections();
+		test_route_rejections();
+		test_virtual_host_validation();
+		test_config_parser_files();
+		test_config_resolver();
 	}
 	catch (const std::exception &error)
 	{
