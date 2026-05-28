@@ -43,6 +43,12 @@ namespace ConfigParserErrors
 		"expected error_page path";
 	static const char* const INVALID_ERROR_STATUS =
 		"invalid error_page status code";
+	static const char* const EXPECTED_LOCATION_PATH =
+		"expected location path";
+	static const char* const EXPECTED_LOCATION_OPEN_BRACE =
+		"expected '{' after location path";
+	static const char* const EXPECTED_LOCATION_CLOSE_BRACE =
+		"expected '}' after location block";
 }
 
 #endif

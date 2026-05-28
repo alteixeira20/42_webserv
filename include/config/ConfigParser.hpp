@@ -74,6 +74,13 @@ class ConfigParser
 		unsigned int			parseStatusCode(const std::string &value,
 									const ConfigToken &token) const;
 		bool					isOnlyDigits(const std::string &value) const;
+
+		/*
+		** Route grammar.
+		** These functions parse location blocks inside a server block.
+		*/
+		void					parseLocation(ServerConfig &server);
+		RouteConfig				parseRoute();
 };
 
 #endif
