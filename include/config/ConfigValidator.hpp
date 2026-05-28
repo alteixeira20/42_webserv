@@ -1,6 +1,7 @@
 #ifndef CONFIG_VALIDATOR_HPP
 # define CONFIG_VALIDATOR_HPP
 
+# include <map>
 # include <set>
 # include <string>
 # include "config/Config.hpp"
@@ -26,12 +27,20 @@ class ConfigValidator
 		void				validate(const Config &config) const;
 
 	private:
-		typedef std::set<std::string>	StringSet;
+		typedef std::set<std::string>				StringSet;
+		typedef std::map<std::string, StringSet>	VirtualHostMap;
 
 		void				validateServer(const ServerConfig &server,
-								StringSet &listenKeys) const;
-		void				validateListen(const ListenConfig &listen,
-								StringSet &listenKeys) const;
+								VirtualHostMap &virtualHosts) const;
+		void				validateServerListens(
+								const ServerConfig &server) const;
+		void				validateVirtualHosts(
+								const ServerConfig &server,
+								VirtualHostMap &virtualHosts) const;
+		void				validateVirtualHostName(
+								const std::string &listenKey,
+								const std::string &serverName,
+								VirtualHostMap &virtualHosts) const;
 		void				validateRoutes(const ServerConfig &server) const;
 		void				validateRoute(const RouteConfig &route,
 								StringSet &routePaths) const;

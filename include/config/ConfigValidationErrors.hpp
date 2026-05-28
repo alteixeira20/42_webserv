@@ -10,8 +10,12 @@ namespace ConfigValidationErrors
 		"configuration must contain at least one server block";
 	static const char* const SERVER_WITHOUT_LISTEN =
 		"server block must contain at least one listen directive";
-	static const char* const DUPLICATE_LISTEN =
-		"duplicate listen endpoint";
+	static const char* const DUPLICATE_LISTEN_IN_SERVER =
+		"duplicate listen endpoint inside server block";
+	static const char* const DUPLICATE_DEFAULT_SERVER =
+		"duplicate default server for listen endpoint";
+	static const char* const DUPLICATE_SERVER_NAME =
+		"duplicate server_name for listen endpoint";
 	static const char* const INVALID_ROUTE_PATH =
 		"location path must start with '/'";
 	static const char* const DUPLICATE_ROUTE_PATH =
