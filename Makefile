@@ -21,7 +21,8 @@ TEST_BINS	:= tests/config/test_config_foundation \
 			   tests/runtime/test_event_loop \
 			   tests/runtime/test_listener_manager \
 			   tests/runtime/test_runtime_loop \
-			   tests/runtime/test_server_runtime
+			   tests/runtime/test_server_runtime \
+			   tests/http/test_http_request_parser
 
 COMMON_SRCS	:= \
 	$(SRC_DIR)/config/Config.cpp \
@@ -38,6 +39,8 @@ COMMON_SRCS	:= \
 	$(SRC_DIR)/config/RouteConfig.cpp \
 	$(SRC_DIR)/config/ServerConfig.cpp \
 	$(SRC_DIR)/http/HttpMethod.cpp \
+	$(SRC_DIR)/http/HttpRequest.cpp \
+	$(SRC_DIR)/http/HttpRequestParser.cpp \
 	$(SRC_DIR)/runtime/ClientConnection.cpp \
 	$(SRC_DIR)/runtime/ClientIo.cpp \
 	$(SRC_DIR)/runtime/ClientManager.cpp \
@@ -53,16 +56,17 @@ SRCS		:= \
 
 OBJS		:= $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
-TEST_LISTENER	:= tests/runtime/test_listener_manager
-TEST_CLIENT		:= tests/runtime/test_client_connection
+TEST_LISTENER		:= tests/runtime/test_listener_manager
+TEST_CLIENT			:= tests/runtime/test_client_connection
 TEST_CLIENT_CLEANUP	:= tests/runtime/test_client_cleanup
-TEST_CLIENT_IO	:= tests/runtime/test_client_io
+TEST_CLIENT_IO		:= tests/runtime/test_client_io
 TEST_CLIENT_MANAGER	:= tests/runtime/test_client_manager
 TEST_DUMMY_RESPONSE	:= tests/runtime/test_dummy_response_runtime
-TEST_EVENT_LOOP	:= tests/runtime/test_event_loop
+TEST_EVENT_LOOP		:= tests/runtime/test_event_loop
 TEST_RUNTIME_LOOP	:= tests/runtime/test_runtime_loop
 TEST_SERVER_RUNTIME	:= tests/runtime/test_server_runtime
-TEST_CONFIG		:= tests/config/test_config_foundation
+TEST_CONFIG			:= tests/config/test_config_foundation
+TEST_HTTP_REQUEST	:= tests/http/test_http_request_parser
 
 all: $(NAME)
 
@@ -100,6 +104,9 @@ $(TEST_RUNTIME_LOOP): tests/runtime/test_runtime_loop.cpp $(SRC_DIR)/runtime/Cli
 $(TEST_SERVER_RUNTIME): tests/runtime/test_server_runtime.cpp $(COMMON_SRCS)
 	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_server_runtime.cpp $(COMMON_SRCS) -o $(TEST_SERVER_RUNTIME)
 
+$(TEST_HTTP_REQUEST): tests/http/test_http_request_parser.cpp $(COMMON_SRCS)
+	$(CXX) $(CXXFLAGS) $(INC) tests/http/test_http_request_parser.cpp $(COMMON_SRCS) -o $(TEST_HTTP_REQUEST)
+
 test_config_internal: $(TEST_CONFIG)
 	./$(TEST_CONFIG)
 
@@ -113,6 +120,9 @@ test_runtime_internal: $(TEST_LISTENER) $(TEST_CLIENT) $(TEST_CLIENT_CLEANUP) $(
 	./$(TEST_EVENT_LOOP)
 	./$(TEST_RUNTIME_LOOP)
 	./$(TEST_SERVER_RUNTIME)
+
+test_http_internal: $(TEST_HTTP_REQUEST)
+	./$(TEST_HTTP_REQUEST)
 
 test:
 	python3 tests/run.py
@@ -210,8 +220,12 @@ clean:
 	rm -rf $(OBJ_DIR)
 
 fclean: clean
-	rm -f $(NAME) $(TEST_LISTENER) $(TEST_CLIENT) $(TEST_CLIENT_CLEANUP) $(TEST_CLIENT_IO) $(TEST_CLIENT_MANAGER) $(TEST_DUMMY_RESPONSE) $(TEST_EVENT_LOOP) $(TEST_RUNTIME_LOOP) $(TEST_SERVER_RUNTIME) $(TEST_CONFIG)
+	rm -f $(NAME) $(TEST_LISTENER) $(TEST_CLIENT) $(TEST_CLIENT_CLEANUP)
+	rm -f $(TEST_CLIENT_IO) $(TEST_CLIENT_MANAGER) $(TEST_DUMMY_RESPONSE)
+	rm -f $(TEST_EVENT_LOOP) $(TEST_RUNTIME_LOOP) $(TEST_SERVER_RUNTIME)
+	rm -f $(TEST_CONFIG) $(TEST_HTTP_REQUEST)
 
 re: fclean all
 
-.PHONY: all test test_config_internal test_runtime_internal diff lint clean fclean re
+.PHONY: all test test_config_internal test_runtime_internal test_http_internal
+.PHONY: diff lint clean fclean re

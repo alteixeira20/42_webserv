@@ -17,7 +17,7 @@ SECTION_TITLES = {
     "build": "Build",
     "config": "Config foundation",
     "runtime": "Runtime tests",
-    "http": "HTTP",
+    "http": "HTTP request parser tests",
     "cgi": "CGI",
     "stress": "Stress",
     "planned": "Planned",
@@ -128,10 +128,19 @@ def runtime_tests():
     ]
 
 
+def http_tests():
+    return [
+        TestCase(
+            "http",
+            "Standalone HTTP request parser foundation tests",
+            ["make", "test_http_internal"],
+            "Run request-line and header parser C++ tests",
+        )
+    ]
+
+
 def planned_tests():
     return [
-        TestCase("planned", "HTTP section",
-                 skip_reason="no active HTTP parser/server behavior tests yet"),
         TestCase("planned", "CGI section",
                  skip_reason="no active CGI tests yet"),
         TestCase("planned", "Stress section",
@@ -141,7 +150,8 @@ def planned_tests():
 
 def tests_for_section(section):
     if section == "all":
-        return build_tests() + config_tests() + runtime_tests() + planned_tests()
+        return (build_tests() + config_tests() + runtime_tests()
+                + http_tests() + planned_tests())
     if section == "build":
         return build_tests()
     if section == "config":
@@ -149,11 +159,11 @@ def tests_for_section(section):
     if section == "runtime":
         return runtime_tests()
     if section == "http":
-        return planned_tests()[0:1]
+        return http_tests()
     if section == "cgi":
-        return planned_tests()[1:2]
+        return planned_tests()[0:1]
     if section == "stress":
-        return planned_tests()[2:3]
+        return planned_tests()[1:2]
     return []
 
 
@@ -329,12 +339,12 @@ def print_summary(results, colors):
 
 def list_sections():
     print("Available test sections:")
-    print("  all      build, config foundation, runtime tests, planned")
+    print("  all      build, config foundation, runtime tests, HTTP parser, planned")
     print("  build    clean build, compile, no-relink, startup smoke")
     print("  config   active config/parser/model foundation tests")
     print("  runtime  active listener, event loop, client I/O, cleanup, "
           "and dummy response tests")
-    print("  http     planned; currently skipped")
+    print("  http     active standalone HTTP request parser tests")
     print("  cgi      planned; currently skipped")
     print("  stress   planned; currently skipped")
 
@@ -368,7 +378,7 @@ def print_menu(colors):
     print("  2. Build")
     print("  3. Config foundation")
     print("  4. Runtime tests")
-    print("  5. HTTP (planned)")
+    print("  5. HTTP request parser")
     print("  6. CGI (planned)")
     print("  7. Stress (planned)")
     print("  8. List sections")
