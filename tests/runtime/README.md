@@ -39,8 +39,11 @@ Current scope:
 - dummy fixed-response runtime path through accepted clients.
 - one-cycle runtime event dispatch for listeners and clients;
 - server runtime startup, counts, and shutdown cleanup.
+- production startup smoke coverage in `tests/run.py` verifies that
+  `./webserv configs/default.conf` stays alive and can be terminated.
 
 Not implemented here:
 
 - HTTP parser integration;
+- real HTTP response generation;
 - CGI pipe execution.

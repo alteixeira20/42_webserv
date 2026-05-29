@@ -44,6 +44,7 @@ Current endpoint flow:
 ```text
 ConfigParser -> Config -> Config::getUniqueListens()
              -> std::vector<ListenConfig>
+             -> ServerRuntime::start()
              -> ListenerManager::openAll()
 ```
 
@@ -60,8 +61,8 @@ Status: Implemented
 
 `src/main.cpp` now relies on semantic config parsing. `ConfigParser` populates
 `ServerConfig` and `ListenConfig` from real `listen` directives, and
-`Config::getUniqueListens()` supplies the listener endpoints. The previous
-`0.0.0.0:8080` temporary fallback was removed.
+`Config::getUniqueListens()` supplies the listener endpoints to
+`ServerRuntime`. The previous `0.0.0.0:8080` temporary fallback was removed.
 
 Empty or invalid config is a startup `ConfigException`, not a runtime fallback.
 
@@ -260,22 +261,21 @@ What it does:
 - Opens listeners through `ListenerManager`.
 - Registers listener fds with `EventLoop`.
 - Runs one or more `RuntimeLoop` cycles when started.
+- Supports the persistent production startup loop in `src/main.cpp`.
 - Exposes listener, client, and watched-fd counts for tests.
 - Closes clients, unregisters listener fds, and closes listeners on shutdown.
 
 What it does not do:
 
-- It is not wired into `main` yet.
-- It does not run an infinite production server loop.
 - It does not parse HTTP or execute CGI.
+- It does not generate real HTTP responses yet.
 
 ## Current Limitations
 
 Status: Temporary
 
-- `main` opens listeners and then exits.
-- `ServerRuntime` can run explicit cycles, but no persistent production loop is
-  wired into `main` yet.
+- `main` now keeps the process alive by repeatedly calling
+  `ServerRuntime::runCycle()` and `ServerRuntime::cleanup()`.
 - There is a temporary dummy response path, not the real HTTP response pipeline.
 - There is no CGI pipe execution.
 - Runtime currently depends on parsed listen endpoints; there is no temporary
@@ -285,18 +285,15 @@ Status: Temporary
 
 Status: Planned
 
-- Implement the full main `poll()`/`select()`/equivalent loop.
 - Monitor read and write readiness simultaneously in the main loop.
 - Never read or write CGI pipes without readiness.
 - Perform at most one read or one write per client per poll cycle.
-- Integrate guarded client I/O into the full server loop.
 - Enforce CGI pipe readiness discipline.
 
 ## Next Runtime Tasks
 
 Status: Planned
 
-- Accept clients continuously from readable listener events.
 - Integrate the HTTP parser.
 - Integrate response building.
 - Later integrate CGI pipes with readiness-aware reads and writes.
