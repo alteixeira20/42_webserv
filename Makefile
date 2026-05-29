@@ -68,6 +68,15 @@ TEST_SERVER_RUNTIME	:= tests/runtime/test_server_runtime
 TEST_CONFIG			:= tests/config/test_config_foundation
 TEST_HTTP_REQUEST	:= tests/http/test_http_request_parser
 
+HTTP_SRCS			:= \
+	$(SRC_DIR)/http/HttpMethod.cpp \
+	$(SRC_DIR)/http/HttpRequest.cpp \
+	$(SRC_DIR)/http/HttpRequestParser.cpp
+
+CLIENT_CONNECTION_SRCS	:= \
+	$(SRC_DIR)/runtime/ClientConnection.cpp \
+	$(HTTP_SRCS)
+
 all: $(NAME)
 
 $(NAME): $(OBJS)
@@ -80,26 +89,26 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 $(TEST_LISTENER): tests/runtime/test_listener_manager.cpp $(COMMON_SRCS)
 	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_listener_manager.cpp $(COMMON_SRCS) -o $(TEST_LISTENER)
 
-$(TEST_CLIENT): tests/runtime/test_client_connection.cpp $(SRC_DIR)/runtime/ClientConnection.cpp
-	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_client_connection.cpp $(SRC_DIR)/runtime/ClientConnection.cpp -o $(TEST_CLIENT)
+$(TEST_CLIENT): tests/runtime/test_client_connection.cpp $(CLIENT_CONNECTION_SRCS)
+	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_client_connection.cpp $(CLIENT_CONNECTION_SRCS) -o $(TEST_CLIENT)
 
-$(TEST_CLIENT_CLEANUP): tests/runtime/test_client_cleanup.cpp $(SRC_DIR)/runtime/ClientConnection.cpp $(SRC_DIR)/runtime/ClientManager.cpp $(SRC_DIR)/runtime/EventLoop.cpp
-	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_client_cleanup.cpp $(SRC_DIR)/runtime/ClientConnection.cpp $(SRC_DIR)/runtime/ClientManager.cpp $(SRC_DIR)/runtime/EventLoop.cpp -o $(TEST_CLIENT_CLEANUP)
+$(TEST_CLIENT_CLEANUP): tests/runtime/test_client_cleanup.cpp $(CLIENT_CONNECTION_SRCS) $(SRC_DIR)/runtime/ClientManager.cpp $(SRC_DIR)/runtime/EventLoop.cpp
+	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_client_cleanup.cpp $(CLIENT_CONNECTION_SRCS) $(SRC_DIR)/runtime/ClientManager.cpp $(SRC_DIR)/runtime/EventLoop.cpp -o $(TEST_CLIENT_CLEANUP)
 
-$(TEST_CLIENT_IO): tests/runtime/test_client_io.cpp $(SRC_DIR)/runtime/ClientConnection.cpp $(SRC_DIR)/runtime/ClientIo.cpp $(SRC_DIR)/runtime/EventLoop.cpp
-	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_client_io.cpp $(SRC_DIR)/runtime/ClientConnection.cpp $(SRC_DIR)/runtime/ClientIo.cpp $(SRC_DIR)/runtime/EventLoop.cpp -o $(TEST_CLIENT_IO)
+$(TEST_CLIENT_IO): tests/runtime/test_client_io.cpp $(CLIENT_CONNECTION_SRCS) $(SRC_DIR)/runtime/ClientIo.cpp $(SRC_DIR)/runtime/EventLoop.cpp
+	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_client_io.cpp $(CLIENT_CONNECTION_SRCS) $(SRC_DIR)/runtime/ClientIo.cpp $(SRC_DIR)/runtime/EventLoop.cpp -o $(TEST_CLIENT_IO)
 
-$(TEST_CLIENT_MANAGER): tests/runtime/test_client_manager.cpp $(SRC_DIR)/runtime/ClientConnection.cpp $(SRC_DIR)/runtime/ClientManager.cpp $(SRC_DIR)/runtime/EventLoop.cpp
-	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_client_manager.cpp $(SRC_DIR)/runtime/ClientConnection.cpp $(SRC_DIR)/runtime/ClientManager.cpp $(SRC_DIR)/runtime/EventLoop.cpp -o $(TEST_CLIENT_MANAGER)
+$(TEST_CLIENT_MANAGER): tests/runtime/test_client_manager.cpp $(CLIENT_CONNECTION_SRCS) $(SRC_DIR)/runtime/ClientManager.cpp $(SRC_DIR)/runtime/EventLoop.cpp
+	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_client_manager.cpp $(CLIENT_CONNECTION_SRCS) $(SRC_DIR)/runtime/ClientManager.cpp $(SRC_DIR)/runtime/EventLoop.cpp -o $(TEST_CLIENT_MANAGER)
 
 $(TEST_DUMMY_RESPONSE): tests/runtime/test_dummy_response_runtime.cpp $(COMMON_SRCS)
 	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_dummy_response_runtime.cpp $(COMMON_SRCS) -o $(TEST_DUMMY_RESPONSE)
 
-$(TEST_EVENT_LOOP): tests/runtime/test_event_loop.cpp $(SRC_DIR)/runtime/ClientConnection.cpp $(SRC_DIR)/runtime/EventLoop.cpp
-	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_event_loop.cpp $(SRC_DIR)/runtime/ClientConnection.cpp $(SRC_DIR)/runtime/EventLoop.cpp -o $(TEST_EVENT_LOOP)
+$(TEST_EVENT_LOOP): tests/runtime/test_event_loop.cpp $(CLIENT_CONNECTION_SRCS) $(SRC_DIR)/runtime/EventLoop.cpp
+	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_event_loop.cpp $(CLIENT_CONNECTION_SRCS) $(SRC_DIR)/runtime/EventLoop.cpp -o $(TEST_EVENT_LOOP)
 
-$(TEST_RUNTIME_LOOP): tests/runtime/test_runtime_loop.cpp $(SRC_DIR)/runtime/ClientConnection.cpp $(SRC_DIR)/runtime/ClientIo.cpp $(SRC_DIR)/runtime/ClientManager.cpp $(SRC_DIR)/runtime/EventLoop.cpp $(SRC_DIR)/runtime/RuntimeLoop.cpp
-	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_runtime_loop.cpp $(SRC_DIR)/runtime/ClientConnection.cpp $(SRC_DIR)/runtime/ClientIo.cpp $(SRC_DIR)/runtime/ClientManager.cpp $(SRC_DIR)/runtime/EventLoop.cpp $(SRC_DIR)/runtime/RuntimeLoop.cpp -o $(TEST_RUNTIME_LOOP)
+$(TEST_RUNTIME_LOOP): tests/runtime/test_runtime_loop.cpp $(CLIENT_CONNECTION_SRCS) $(SRC_DIR)/runtime/ClientIo.cpp $(SRC_DIR)/runtime/ClientManager.cpp $(SRC_DIR)/runtime/EventLoop.cpp $(SRC_DIR)/runtime/RuntimeLoop.cpp
+	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_runtime_loop.cpp $(CLIENT_CONNECTION_SRCS) $(SRC_DIR)/runtime/ClientIo.cpp $(SRC_DIR)/runtime/ClientManager.cpp $(SRC_DIR)/runtime/EventLoop.cpp $(SRC_DIR)/runtime/RuntimeLoop.cpp -o $(TEST_RUNTIME_LOOP)
 
 $(TEST_SERVER_RUNTIME): tests/runtime/test_server_runtime.cpp $(COMMON_SRCS)
 	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_server_runtime.cpp $(COMMON_SRCS) -o $(TEST_SERVER_RUNTIME)
