@@ -7,6 +7,7 @@ import argparse
 import os
 import subprocess
 import sys
+import time
 
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -52,7 +53,7 @@ class Colors(object):
 class TestCase(object):
     def __init__(self, section, name, command=None, description="",
                  skip_reason="", validator=None, timeout=None,
-                 timeout_ok=False):
+                 timeout_ok=False, expect_alive=False, startup_wait=0.5):
         self.section = section
         self.name = name
         self.command = command
@@ -61,6 +62,8 @@ class TestCase(object):
         self.validator = validator
         self.timeout = timeout
         self.timeout_ok = timeout_ok
+        self.expect_alive = expect_alive
+        self.startup_wait = startup_wait
 
 
 class TestResult(object):
@@ -99,8 +102,8 @@ def build_tests():
                  validator=no_relink_validator),
         TestCase("build", "Start webserv with default config",
                  ["./webserv", "configs/default.conf"],
-                 "Smoke test startup with configs/default.conf", timeout=1,
-                 timeout_ok=True),
+                 "Smoke test that configs/default.conf starts a persistent server",
+                 expect_alive=True),
     ]
 
 
@@ -185,6 +188,8 @@ def run_test(test, colors, verbose):
 
 
 def execute_test(test):
+    if test.expect_alive:
+        return execute_alive_test(test)
     process = subprocess.Popen(
         test.command,
         cwd=ROOT_DIR,
@@ -209,6 +214,35 @@ def execute_test(test):
             result.status = "failed"
             result.reason = reason
     return result
+
+
+def execute_alive_test(test):
+    try:
+        process = subprocess.Popen(
+            test.command,
+            cwd=ROOT_DIR,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+        )
+    except OSError as error:
+        return TestResult(test, "failed", exit_code="not-started",
+                          stderr=str(error), reason="process could not start")
+    try:
+        time.sleep(test.startup_wait)
+        if process.poll() is None:
+            stdout, stderr = stop_process(process)
+            return TestResult(test, "passed", exit_code="running",
+                              stdout=stdout, stderr=stderr)
+        stdout, stderr = process.communicate()
+        return TestResult(test, "failed", exit_code=process.returncode,
+                          stdout=stdout, stderr=stderr,
+                          reason="process exited before startup check")
+    except KeyboardInterrupt:
+        stdout, stderr = stop_process(process)
+        return TestResult(test, "failed", exit_code="interrupted",
+                          stdout=stdout, stderr=stderr,
+                          reason="interrupted by user")
 
 
 def stop_process(process):

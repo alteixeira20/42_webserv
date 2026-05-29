@@ -1,7 +1,9 @@
 #include "config/Config.hpp"
 #include "config/ConfigParser.hpp"
 #include "config/ListenConfig.hpp"
-#include "runtime/ListenerManager.hpp"
+#include "runtime/ServerRuntime.hpp"
+
+#include <ctime>
 
 #include <exception>
 #include <iostream>
@@ -17,14 +19,21 @@ int	main(int argc, char **argv)
 	{
 		ConfigParser				parser;
 		Config						configData;
-		ListenerManager				listeners;
+		ServerRuntime				runtime;
 		std::vector<ListenConfig>	endpoints;
+		const int					pollTimeoutMs = 1000;
+		const int					clientTimeoutSeconds = 30;
 
 		configData = parser.parseFile(configPath);
 		endpoints = configData.getUniqueListens();
-		listeners.openAll(endpoints);
-		std::cout << "listening on " << listeners.listeners().size()
+		runtime.start(endpoints);
+		std::cout << "listening on " << runtime.listenerCount()
 			<< " endpoint(s)" << std::endl;
+		while (true)
+		{
+			runtime.runCycle(pollTimeoutMs);
+			runtime.cleanup(std::time(NULL), clientTimeoutSeconds);
+		}
 	}
 	catch (const std::exception &error)
 	{
