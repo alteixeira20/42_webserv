@@ -17,6 +17,8 @@ Status: Implemented
 - Client cleanup for timeouts, closing connections, and full shutdown.
 - Guarded client socket read/write helper.
 - Dummy fixed-response runtime path.
+- One-cycle runtime event dispatch for listener and client readiness.
+- Server runtime composition and clean shutdown.
 - Runtime tests for the foundation modules.
 
 Status: Not responsible for
@@ -223,12 +225,57 @@ What it does not do:
 - It does not serve files.
 - It does not execute CGI.
 
+## RuntimeLoop
+
+Status: Implemented
+
+`RuntimeLoop` coordinates one `poll()` cycle without owning protocol semantics.
+
+What it does:
+
+- Polls registered runtime fds through `EventLoop`.
+- Accepts readable listener events through `ClientManager`.
+- Dispatches ready client events through guarded `ClientIo` helpers.
+- Marks poll error or closed client events for cleanup.
+- Removes closing clients after each cycle.
+- Exposes per-cycle counters for tests.
+
+What it does not do:
+
+- It does not parse HTTP.
+- It does not build HTTP responses.
+- It does not execute CGI.
+- It does not own listener setup or shutdown.
+
+## ServerRuntime
+
+Status: Implemented
+
+`ServerRuntime` composes the listener, event loop, client, I/O, and runtime loop
+foundation behind one startup/shutdown API.
+
+What it does:
+
+- Starts from `std::vector<ListenConfig>`.
+- Opens listeners through `ListenerManager`.
+- Registers listener fds with `EventLoop`.
+- Runs one or more `RuntimeLoop` cycles when started.
+- Exposes listener, client, and watched-fd counts for tests.
+- Closes clients, unregisters listener fds, and closes listeners on shutdown.
+
+What it does not do:
+
+- It is not wired into `main` yet.
+- It does not run an infinite production server loop.
+- It does not parse HTTP or execute CGI.
+
 ## Current Limitations
 
 Status: Temporary
 
 - `main` opens listeners and then exits.
-- There is no persistent main loop yet.
+- `ServerRuntime` can run explicit cycles, but no persistent production loop is
+  wired into `main` yet.
 - There is a temporary dummy response path, not the real HTTP response pipeline.
 - There is no CGI pipe execution.
 - Runtime currently depends on parsed listen endpoints; there is no temporary
@@ -249,9 +296,7 @@ Status: Planned
 
 Status: Planned
 
-- Wire listener fds into a persistent `EventLoop`.
 - Accept clients continuously from readable listener events.
 - Integrate the HTTP parser.
 - Integrate response building.
 - Later integrate CGI pipes with readiness-aware reads and writes.
-
