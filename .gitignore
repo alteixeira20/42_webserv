@@ -30,6 +30,7 @@ tests/tmp/
 /tests/runtime/test_listener_manager
 /tests/runtime/test_runtime_loop
 /tests/runtime/test_server_runtime
+/tests/http/test_http_request_parser
 
 # Logs
 *.log
