@@ -39,8 +39,11 @@ Current scope:
 - dummy fixed-response runtime path through accepted clients.
 - one-cycle runtime event dispatch for listeners and clients;
 - server runtime startup, counts, and shutdown cleanup.
+- build/startup smoke coverage checks that `./webserv configs/default.conf`
+  remains alive and can be terminated by the test runner.
 
 Not implemented here:
 
 - HTTP parser integration;
+- real HTTP response generation or static serving;
 - CGI pipe execution.
