@@ -220,8 +220,12 @@ clean:
 	rm -rf $(OBJ_DIR)
 
 fclean: clean
-	rm -f $(NAME) $(TEST_LISTENER) $(TEST_CLIENT) $(TEST_CLIENT_CLEANUP) $(TEST_CLIENT_IO) $(TEST_CLIENT_MANAGER) $(TEST_DUMMY_RESPONSE) $(TEST_EVENT_LOOP) $(TEST_RUNTIME_LOOP) $(TEST_SERVER_RUNTIME) $(TEST_CONFIG)
+	rm -f $(NAME) $(TEST_LISTENER) $(TEST_CLIENT) $(TEST_CLIENT_CLEANUP)
+	rm -f $(TEST_CLIENT_IO) $(TEST_CLIENT_MANAGER) $(TEST_DUMMY_RESPONSE)
+	rm -f $(TEST_EVENT_LOOP) $(TEST_RUNTIME_LOOP) $(TEST_SERVER_RUNTIME)
+	rm -f $(TEST_CONFIG) $(TEST_HTTP_REQUEST)
 
 re: fclean all
 
-.PHONY: all test test_config_internal test_runtime_internal diff lint clean fclean re
+.PHONY: all test test_config_internal test_runtime_internal test_http_internal
+.PHONY: diff lint clean fclean re

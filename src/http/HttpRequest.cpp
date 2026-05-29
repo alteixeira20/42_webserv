@@ -1,6 +1,6 @@
 #include "http/HttpRequest.hpp"
 
-HttpRequest::HttpRequest(void)
+HttpRequest::HttpRequest()
 	: _method(HTTP_METHOD_UNKNOWN),
 	  _target(),
 	  _version(),
@@ -29,11 +29,11 @@ HttpRequest	&HttpRequest::operator=(const HttpRequest &other)
 	return (*this);
 }
 
-HttpRequest::~HttpRequest(void)
+HttpRequest::~HttpRequest()
 {
 }
 
-void	HttpRequest::clear(void)
+void	HttpRequest::clear()
 {
 	_method = HTTP_METHOD_UNKNOWN;
 	_target.clear();
@@ -62,22 +62,22 @@ void	HttpRequest::setHeader(const std::string &name,
 	_headers[normalizeHeaderName(name)] = value;
 }
 
-HttpMethod	HttpRequest::getMethod(void) const
+HttpMethod	HttpRequest::getMethod() const
 {
 	return (_method);
 }
 
-const std::string	&HttpRequest::getTarget(void) const
+const std::string	&HttpRequest::getTarget() const
 {
 	return (_target);
 }
 
-const std::string	&HttpRequest::getVersion(void) const
+const std::string	&HttpRequest::getVersion() const
 {
 	return (_version);
 }
 
-const HttpRequest::HeaderMap	&HttpRequest::getHeaders(void) const
+const HttpRequest::HeaderMap	&HttpRequest::getHeaders() const
 {
 	return (_headers);
 }

@@ -1,22 +1,21 @@
 # HTTP Tests
 
-Status: Planned
+Status: Active
 
-HTTP behavior tests will be added after request parsing, routing, and response
-generation are implemented.
+The active HTTP section currently covers the standalone request parser
+foundation only. It does not exercise runtime integration, routing, response
+generation, body parsing, CGI, uploads, or static serving.
 
-Planned coverage:
+Active coverage:
 
-- `GET`;
-- `POST`;
-- `DELETE`;
-- unknown methods without crashing;
-- correct status codes;
-- static file serving;
-- wrong URL handling;
-- autoindex;
-- redirects;
-- upload and retrieve file behavior.
+- request-line parsing from complete and split input;
+- header parsing until the blank line;
+- case-insensitive header lookup;
+- header whitespace trimming;
+- malformed request-line and header errors;
+- oversized header section errors;
+- parser reset behavior.
 
-`python3 tests/run.py http` currently reports this section as skipped.
+`python3 tests/run.py http` runs `make test_http_internal`.
 
+Full HTTP server behavior remains planned for later slices.

@@ -17,12 +17,12 @@ class HttpRequest
 	public:
 		typedef std::map<std::string, std::string>	HeaderMap;
 
-		HttpRequest(void);
+		HttpRequest();
 		HttpRequest(const HttpRequest &other);
 		HttpRequest	&operator=(const HttpRequest &other);
-		~HttpRequest(void);
+		~HttpRequest();
 
-		void				clear(void);
+		void				clear();
 
 		void				setMethod(HttpMethod method);
 		void				setTarget(const std::string &target);
@@ -30,10 +30,10 @@ class HttpRequest
 		void				setHeader(const std::string &name,
 								const std::string &value);
 
-		HttpMethod			getMethod(void) const;
-		const std::string	&getTarget(void) const;
-		const std::string	&getVersion(void) const;
-		const HeaderMap		&getHeaders(void) const;
+		HttpMethod			getMethod() const;
+		const std::string	&getTarget() const;
+		const std::string	&getVersion() const;
+		const HeaderMap		&getHeaders() const;
 
 		bool				hasHeader(const std::string &name) const;
 		std::string			getHeader(const std::string &name) const;
