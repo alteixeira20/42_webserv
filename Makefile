@@ -19,7 +19,9 @@ TEST_BINS	:= tests/config/test_config_foundation \
 			   tests/runtime/test_client_manager \
 			   tests/runtime/test_dummy_response_runtime \
 			   tests/runtime/test_event_loop \
-			   tests/runtime/test_listener_manager
+			   tests/runtime/test_listener_manager \
+			   tests/runtime/test_runtime_loop \
+			   tests/runtime/test_server_runtime
 
 COMMON_SRCS	:= \
 	$(SRC_DIR)/config/Config.cpp \
@@ -41,7 +43,9 @@ COMMON_SRCS	:= \
 	$(SRC_DIR)/runtime/ClientManager.cpp \
 	$(SRC_DIR)/runtime/DummyResponseRuntime.cpp \
 	$(SRC_DIR)/runtime/EventLoop.cpp \
-	$(SRC_DIR)/runtime/ListenerManager.cpp
+	$(SRC_DIR)/runtime/ListenerManager.cpp \
+	$(SRC_DIR)/runtime/RuntimeLoop.cpp \
+	$(SRC_DIR)/runtime/ServerRuntime.cpp
 
 SRCS		:= \
 	$(SRC_DIR)/main.cpp \
@@ -56,6 +60,8 @@ TEST_CLIENT_IO	:= tests/runtime/test_client_io
 TEST_CLIENT_MANAGER	:= tests/runtime/test_client_manager
 TEST_DUMMY_RESPONSE	:= tests/runtime/test_dummy_response_runtime
 TEST_EVENT_LOOP	:= tests/runtime/test_event_loop
+TEST_RUNTIME_LOOP	:= tests/runtime/test_runtime_loop
+TEST_SERVER_RUNTIME	:= tests/runtime/test_server_runtime
 TEST_CONFIG		:= tests/config/test_config_foundation
 
 all: $(NAME)
@@ -88,10 +94,16 @@ $(TEST_DUMMY_RESPONSE): tests/runtime/test_dummy_response_runtime.cpp $(COMMON_S
 $(TEST_EVENT_LOOP): tests/runtime/test_event_loop.cpp $(SRC_DIR)/runtime/ClientConnection.cpp $(SRC_DIR)/runtime/EventLoop.cpp
 	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_event_loop.cpp $(SRC_DIR)/runtime/ClientConnection.cpp $(SRC_DIR)/runtime/EventLoop.cpp -o $(TEST_EVENT_LOOP)
 
+$(TEST_RUNTIME_LOOP): tests/runtime/test_runtime_loop.cpp $(SRC_DIR)/runtime/ClientConnection.cpp $(SRC_DIR)/runtime/ClientIo.cpp $(SRC_DIR)/runtime/ClientManager.cpp $(SRC_DIR)/runtime/EventLoop.cpp $(SRC_DIR)/runtime/RuntimeLoop.cpp
+	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_runtime_loop.cpp $(SRC_DIR)/runtime/ClientConnection.cpp $(SRC_DIR)/runtime/ClientIo.cpp $(SRC_DIR)/runtime/ClientManager.cpp $(SRC_DIR)/runtime/EventLoop.cpp $(SRC_DIR)/runtime/RuntimeLoop.cpp -o $(TEST_RUNTIME_LOOP)
+
+$(TEST_SERVER_RUNTIME): tests/runtime/test_server_runtime.cpp $(COMMON_SRCS)
+	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_server_runtime.cpp $(COMMON_SRCS) -o $(TEST_SERVER_RUNTIME)
+
 test_config_internal: $(TEST_CONFIG)
 	./$(TEST_CONFIG)
 
-test_runtime_internal: $(TEST_LISTENER) $(TEST_CLIENT) $(TEST_CLIENT_CLEANUP) $(TEST_CLIENT_IO) $(TEST_CLIENT_MANAGER) $(TEST_DUMMY_RESPONSE) $(TEST_EVENT_LOOP)
+test_runtime_internal: $(TEST_LISTENER) $(TEST_CLIENT) $(TEST_CLIENT_CLEANUP) $(TEST_CLIENT_IO) $(TEST_CLIENT_MANAGER) $(TEST_DUMMY_RESPONSE) $(TEST_EVENT_LOOP) $(TEST_RUNTIME_LOOP) $(TEST_SERVER_RUNTIME)
 	./$(TEST_LISTENER)
 	./$(TEST_CLIENT)
 	./$(TEST_CLIENT_CLEANUP)
@@ -99,6 +111,8 @@ test_runtime_internal: $(TEST_LISTENER) $(TEST_CLIENT) $(TEST_CLIENT_CLEANUP) $(
 	./$(TEST_CLIENT_MANAGER)
 	./$(TEST_DUMMY_RESPONSE)
 	./$(TEST_EVENT_LOOP)
+	./$(TEST_RUNTIME_LOOP)
+	./$(TEST_SERVER_RUNTIME)
 
 test:
 	python3 tests/run.py
@@ -196,7 +210,7 @@ clean:
 	rm -rf $(OBJ_DIR)
 
 fclean: clean
-	rm -f $(NAME) $(TEST_LISTENER) $(TEST_CLIENT) $(TEST_CLIENT_CLEANUP) $(TEST_CLIENT_IO) $(TEST_CLIENT_MANAGER) $(TEST_DUMMY_RESPONSE) $(TEST_EVENT_LOOP) $(TEST_CONFIG)
+	rm -f $(NAME) $(TEST_LISTENER) $(TEST_CLIENT) $(TEST_CLIENT_CLEANUP) $(TEST_CLIENT_IO) $(TEST_CLIENT_MANAGER) $(TEST_DUMMY_RESPONSE) $(TEST_EVENT_LOOP) $(TEST_RUNTIME_LOOP) $(TEST_SERVER_RUNTIME) $(TEST_CONFIG)
 
 re: fclean all
 

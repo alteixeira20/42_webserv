@@ -28,6 +28,8 @@ tests/tmp/
 /tests/runtime/test_dummy_response_runtime
 /tests/runtime/test_event_loop
 /tests/runtime/test_listener_manager
+/tests/runtime/test_runtime_loop
+/tests/runtime/test_server_runtime
 
 # Logs
 *.log

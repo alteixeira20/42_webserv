@@ -12,6 +12,8 @@ Runtime foundation tests live in this directory and are built by the existing
 - `tests/runtime/test_client_io.cpp`
 - `tests/runtime/test_client_manager.cpp`
 - `tests/runtime/test_dummy_response_runtime.cpp`
+- `tests/runtime/test_runtime_loop.cpp`
+- `tests/runtime/test_server_runtime.cpp`
 
 Run them through:
 
@@ -35,9 +37,10 @@ Current scope:
 - timeout, closing-state, and close-all client cleanup;
 - guarded client read/write return handling;
 - dummy fixed-response runtime path through accepted clients.
+- one-cycle runtime event dispatch for listeners and clients;
+- server runtime startup, counts, and shutdown cleanup.
 
 Not implemented here:
 
-- persistent main loop;
 - HTTP parser integration;
 - CGI pipe execution.
