@@ -282,6 +282,8 @@ Status: Temporary
 - `main` now keeps the process alive by repeatedly calling
   `ServerRuntime::runCycle()` and `ServerRuntime::cleanup()`.
 - Production runtime now returns a minimal close-after-response HTTP response.
+- `ResponseBuilder` has default and caller-supplied custom error response
+  helpers, but runtime does not select route/config error pages yet.
 - `DummyResponseRuntime` remains as a runtime foundation test/demo helper.
 - There is no static file serving yet.
 - There is no CGI pipe execution.
@@ -303,5 +305,5 @@ Status: Planned
 Status: Planned
 
 - Integrate routing and static response generation.
-- Replace minimal response bodies with real response handling and errors.
+- Connect configured error-page file selection to response generation.
 - Later integrate CGI pipes with readiness-aware reads and writes.

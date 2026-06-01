@@ -68,6 +68,8 @@ std::string	HttpResponse::serialize(void) const
 	headers["Content-Length"] = sizeToString(_body.size());
 	if (_closeConnection)
 		headers["Connection"] = "close";
+	else
+		headers["Connection"] = "keep-alive";
 	output << "HTTP/1.1 " << _statusCode << " " << _reasonPhrase << "\r\n";
 	for (HeaderMap::const_iterator it = headers.begin(); it != headers.end();
 		++it)
@@ -81,12 +83,24 @@ std::string	HttpResponse::defaultReasonPhrase(unsigned int code)
 {
 	if (code == 200)
 		return ("OK");
+	if (code == 201)
+		return ("Created");
+	if (code == 204)
+		return ("No Content");
+	if (code == 301)
+		return ("Moved Permanently");
+	if (code == 302)
+		return ("Found");
 	if (code == 400)
 		return ("Bad Request");
+	if (code == 403)
+		return ("Forbidden");
 	if (code == 404)
 		return ("Not Found");
 	if (code == 405)
 		return ("Method Not Allowed");
+	if (code == 413)
+		return ("Payload Too Large");
 	if (code == 431)
 		return ("Request Header Fields Too Large");
 	if (code == 500)

@@ -16,7 +16,11 @@ Active coverage:
 - oversized header section errors;
 - parser reset behavior.
 - response status line, header, body, and `Content-Length` serialization;
-- minimal `ResponseBuilder` close-after-response defaults.
+- explicit `Connection` serialization;
+- required status reason phrases;
+- minimal `ResponseBuilder` close-after-response defaults;
+- default HTML error pages;
+- custom error-page response bodies supplied by later routing/static code.
 
 `python3 tests/run.py http` runs `make test_http_internal`.
 
