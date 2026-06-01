@@ -22,7 +22,8 @@ TEST_BINS	:= tests/config/test_config_foundation \
 			   tests/runtime/test_listener_manager \
 			   tests/runtime/test_runtime_loop \
 			   tests/runtime/test_server_runtime \
-			   tests/http/test_http_request_parser
+			   tests/http/test_http_request_parser \
+			   tests/http/test_http_response
 
 COMMON_SRCS	:= \
 	$(SRC_DIR)/config/Config.cpp \
@@ -41,6 +42,8 @@ COMMON_SRCS	:= \
 	$(SRC_DIR)/http/HttpMethod.cpp \
 	$(SRC_DIR)/http/HttpRequest.cpp \
 	$(SRC_DIR)/http/HttpRequestParser.cpp \
+	$(SRC_DIR)/http/HttpResponse.cpp \
+	$(SRC_DIR)/http/ResponseBuilder.cpp \
 	$(SRC_DIR)/runtime/ClientConnection.cpp \
 	$(SRC_DIR)/runtime/ClientIo.cpp \
 	$(SRC_DIR)/runtime/ClientManager.cpp \
@@ -67,11 +70,16 @@ TEST_RUNTIME_LOOP	:= tests/runtime/test_runtime_loop
 TEST_SERVER_RUNTIME	:= tests/runtime/test_server_runtime
 TEST_CONFIG			:= tests/config/test_config_foundation
 TEST_HTTP_REQUEST	:= tests/http/test_http_request_parser
+TEST_HTTP_RESPONSE	:= tests/http/test_http_response
 
 HTTP_SRCS			:= \
 	$(SRC_DIR)/http/HttpMethod.cpp \
 	$(SRC_DIR)/http/HttpRequest.cpp \
 	$(SRC_DIR)/http/HttpRequestParser.cpp
+
+HTTP_RESPONSE_SRCS	:= \
+	$(SRC_DIR)/http/HttpResponse.cpp \
+	$(SRC_DIR)/http/ResponseBuilder.cpp
 
 CLIENT_CONNECTION_SRCS	:= \
 	$(SRC_DIR)/runtime/ClientConnection.cpp \
@@ -107,14 +115,17 @@ $(TEST_DUMMY_RESPONSE): tests/runtime/test_dummy_response_runtime.cpp $(COMMON_S
 $(TEST_EVENT_LOOP): tests/runtime/test_event_loop.cpp $(CLIENT_CONNECTION_SRCS) $(SRC_DIR)/runtime/EventLoop.cpp
 	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_event_loop.cpp $(CLIENT_CONNECTION_SRCS) $(SRC_DIR)/runtime/EventLoop.cpp -o $(TEST_EVENT_LOOP)
 
-$(TEST_RUNTIME_LOOP): tests/runtime/test_runtime_loop.cpp $(CLIENT_CONNECTION_SRCS) $(SRC_DIR)/runtime/ClientIo.cpp $(SRC_DIR)/runtime/ClientManager.cpp $(SRC_DIR)/runtime/EventLoop.cpp $(SRC_DIR)/runtime/RuntimeLoop.cpp
-	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_runtime_loop.cpp $(CLIENT_CONNECTION_SRCS) $(SRC_DIR)/runtime/ClientIo.cpp $(SRC_DIR)/runtime/ClientManager.cpp $(SRC_DIR)/runtime/EventLoop.cpp $(SRC_DIR)/runtime/RuntimeLoop.cpp -o $(TEST_RUNTIME_LOOP)
+$(TEST_RUNTIME_LOOP): tests/runtime/test_runtime_loop.cpp $(CLIENT_CONNECTION_SRCS) $(HTTP_RESPONSE_SRCS) $(SRC_DIR)/runtime/ClientIo.cpp $(SRC_DIR)/runtime/ClientManager.cpp $(SRC_DIR)/runtime/EventLoop.cpp $(SRC_DIR)/runtime/RuntimeLoop.cpp
+	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_runtime_loop.cpp $(CLIENT_CONNECTION_SRCS) $(HTTP_RESPONSE_SRCS) $(SRC_DIR)/runtime/ClientIo.cpp $(SRC_DIR)/runtime/ClientManager.cpp $(SRC_DIR)/runtime/EventLoop.cpp $(SRC_DIR)/runtime/RuntimeLoop.cpp -o $(TEST_RUNTIME_LOOP)
 
 $(TEST_SERVER_RUNTIME): tests/runtime/test_server_runtime.cpp $(COMMON_SRCS)
 	$(CXX) $(CXXFLAGS) $(INC) tests/runtime/test_server_runtime.cpp $(COMMON_SRCS) -o $(TEST_SERVER_RUNTIME)
 
 $(TEST_HTTP_REQUEST): tests/http/test_http_request_parser.cpp $(COMMON_SRCS)
 	$(CXX) $(CXXFLAGS) $(INC) tests/http/test_http_request_parser.cpp $(COMMON_SRCS) -o $(TEST_HTTP_REQUEST)
+
+$(TEST_HTTP_RESPONSE): tests/http/test_http_response.cpp $(HTTP_SRCS) $(HTTP_RESPONSE_SRCS)
+	$(CXX) $(CXXFLAGS) $(INC) tests/http/test_http_response.cpp $(HTTP_SRCS) $(HTTP_RESPONSE_SRCS) -o $(TEST_HTTP_RESPONSE)
 
 test_config_internal: $(TEST_CONFIG)
 	./$(TEST_CONFIG)
@@ -130,8 +141,9 @@ test_runtime_internal: $(TEST_LISTENER) $(TEST_CLIENT) $(TEST_CLIENT_CLEANUP) $(
 	./$(TEST_RUNTIME_LOOP)
 	./$(TEST_SERVER_RUNTIME)
 
-test_http_internal: $(TEST_HTTP_REQUEST)
+test_http_internal: $(TEST_HTTP_REQUEST) $(TEST_HTTP_RESPONSE)
 	./$(TEST_HTTP_REQUEST)
+	./$(TEST_HTTP_RESPONSE)
 
 test:
 	python3 tests/run.py
@@ -232,7 +244,7 @@ fclean: clean
 	rm -f $(NAME) $(TEST_LISTENER) $(TEST_CLIENT) $(TEST_CLIENT_CLEANUP)
 	rm -f $(TEST_CLIENT_IO) $(TEST_CLIENT_MANAGER) $(TEST_DUMMY_RESPONSE)
 	rm -f $(TEST_EVENT_LOOP) $(TEST_RUNTIME_LOOP) $(TEST_SERVER_RUNTIME)
-	rm -f $(TEST_CONFIG) $(TEST_HTTP_REQUEST)
+	rm -f $(TEST_CONFIG) $(TEST_HTTP_REQUEST) $(TEST_HTTP_RESPONSE)
 
 re: fclean all
 

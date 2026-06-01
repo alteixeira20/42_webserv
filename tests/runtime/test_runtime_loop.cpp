@@ -220,6 +220,39 @@ static void	test_cleanup_closes_timed_out_clients(void)
 		"expected cleanup to unregister timed-out client fd");
 }
 
+static void	test_processing_client_gets_response_and_closes(void)
+{
+	int					fds[2];
+	EventLoop			eventLoop;
+	ClientManager		clients;
+	ClientIo			io(1024);
+	RuntimeLoop			runtime(eventLoop, clients, io);
+	std::string			request;
+	std::string			response;
+
+	if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) != 0)
+		throw std::runtime_error("socketpair failed");
+	set_non_blocking(fds[0]);
+	set_non_blocking(fds[1]);
+	clients.connections().push_back(ClientConnection(fds[0], 10));
+	eventLoop.registerClient(clients.connections().back());
+	request = "GET /hello HTTP/1.1\r\nHost: localhost\r\n\r\n";
+	write(fds[1], request.c_str(), request.size());
+
+	runtime.runCycles(3, 100);
+	response = read_available(fds[1]);
+
+	close_fd(fds[1]);
+	assert_true(response.find("HTTP/1.1 200 OK\r\n") == 0,
+		"runtime should write a 200 response");
+	assert_true(response.find("Connection: close\r\n") != std::string::npos,
+		"runtime response should ask to close");
+	assert_true(response.find("target: /hello\n") != std::string::npos,
+		"runtime response should include the parsed request target");
+	assert_true(clients.connections().empty(),
+		"runtime should close client after response drains");
+}
+
 int	main(void)
 {
 	try
@@ -230,6 +263,7 @@ int	main(void)
 		test_run_cycles_repeats_poll_and_cleanup();
 		test_closed_client_event_marks_client_closing();
 		test_cleanup_closes_timed_out_clients();
+		test_processing_client_gets_response_and_closes();
 	}
 	catch (const std::exception &error)
 	{

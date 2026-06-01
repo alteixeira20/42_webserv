@@ -24,7 +24,7 @@ Status: Implemented
 Status: Not responsible for
 
 - Full HTTP request parsing.
-- HTTP response generation.
+- Full HTTP response generation.
 - Route resolution.
 - Filesystem serving.
 - Upload behavior.
@@ -238,6 +238,10 @@ What it does:
 - Polls registered runtime fds through `EventLoop`.
 - Accepts readable listener events through `ClientManager`.
 - Dispatches ready client events through guarded `ClientIo` helpers.
+- Queues a minimal `ResponseBuilder` response when a parsed request reaches
+  `ClientConnection::PROCESSING`.
+- Transitions responding clients to `WRITING_RESPONSE`.
+- Marks clients closing after the response write buffer drains.
 - Marks poll error or closed client events for cleanup.
 - Removes closing clients after each cycle.
 - Exposes per-cycle counters for tests.
@@ -245,7 +249,7 @@ What it does:
 What it does not do:
 
 - It does not parse HTTP.
-- It does not build HTTP responses.
+- It does not route requests or serve files.
 - It does not execute CGI.
 - It does not own listener setup or shutdown.
 
@@ -269,7 +273,7 @@ What it does:
 What it does not do:
 
 - It does not parse HTTP or execute CGI.
-- It does not generate real HTTP responses yet.
+- It does not route requests, serve files, or generate final project responses.
 
 ## Current Limitations
 
@@ -277,7 +281,8 @@ Status: Temporary
 
 - `main` now keeps the process alive by repeatedly calling
   `ServerRuntime::runCycle()` and `ServerRuntime::cleanup()`.
-- There is a temporary dummy response path, not the real HTTP response pipeline.
+- Production runtime now returns a minimal close-after-response HTTP response.
+- `DummyResponseRuntime` remains as a runtime foundation test/demo helper.
 - There is no static file serving yet.
 - There is no CGI pipe execution.
 - There is no graceful signal shutdown path yet.
@@ -297,6 +302,6 @@ Status: Planned
 
 Status: Planned
 
-- Integrate the HTTP parser.
-- Integrate response building.
+- Integrate routing and static response generation.
+- Replace minimal response bodies with real response handling and errors.
 - Later integrate CGI pipes with readiness-aware reads and writes.

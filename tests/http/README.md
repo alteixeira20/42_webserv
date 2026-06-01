@@ -2,9 +2,9 @@
 
 Status: Active
 
-The active HTTP section currently covers the standalone request parser
-foundation only. It does not exercise runtime integration, routing, response
-generation, body parsing, CGI, uploads, or static serving.
+The active HTTP section currently covers the standalone request parser and
+response builder foundations. It does not exercise runtime integration,
+routing, body parsing, CGI, uploads, or static serving.
 
 Active coverage:
 
@@ -15,6 +15,8 @@ Active coverage:
 - malformed request-line and header errors;
 - oversized header section errors;
 - parser reset behavior.
+- response status line, header, body, and `Content-Length` serialization;
+- minimal `ResponseBuilder` close-after-response defaults.
 
 `python3 tests/run.py http` runs `make test_http_internal`.
 

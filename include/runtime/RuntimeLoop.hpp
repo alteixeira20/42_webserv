@@ -43,6 +43,8 @@ class RuntimeLoop
 		void	handleEvent(const EventLoopEvent &event, RuntimeLoopStats &stats);
 		void	handleClientEvent(const EventLoopEvent &event,
 			RuntimeLoopStats &stats);
+		void	queueProcessingResponses(void);
+		void	closeIfResponseComplete(ClientConnection &client);
 };
 
 #endif

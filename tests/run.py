@@ -18,7 +18,7 @@ SECTION_TITLES = {
     "build": "Build",
     "config": "Config foundation",
     "runtime": "Runtime tests",
-    "http": "HTTP request parser tests",
+    "http": "HTTP tests",
     "cgi": "CGI",
     "stress": "Stress",
     "planned": "Planned",
@@ -124,7 +124,7 @@ def runtime_tests():
         TestCase(
             "runtime",
             "ListenerManager, EventLoop, ClientConnection, ClientManager, "
-            "ClientIo, cleanup, and dummy response runtime tests",
+            "ClientIo, cleanup, and response runtime tests",
             ["make", "test_runtime_internal"],
             "Run the active runtime C++ test binaries",
         )
@@ -135,9 +135,9 @@ def http_tests():
     return [
         TestCase(
             "http",
-            "Standalone HTTP request parser foundation tests",
+            "Standalone HTTP request/response foundation tests",
             ["make", "test_http_internal"],
-            "Run request-line and header parser C++ tests",
+            "Run request parser and response builder C++ tests",
         )
     ]
 
@@ -373,12 +373,12 @@ def print_summary(results, colors):
 
 def list_sections():
     print("Available test sections:")
-    print("  all      build, config foundation, runtime tests, HTTP parser, planned")
+    print("  all      build, config foundation, runtime tests, HTTP tests, planned")
     print("  build    clean build, compile, no-relink, startup smoke")
     print("  config   active config/parser/model foundation tests")
     print("  runtime  active listener, event loop, client I/O, cleanup, "
-          "and dummy response tests")
-    print("  http     active standalone HTTP request parser tests")
+          "and response runtime tests")
+    print("  http     active standalone HTTP request/response tests")
     print("  cgi      planned; currently skipped")
     print("  stress   planned; currently skipped")
 
@@ -412,7 +412,7 @@ def print_menu(colors):
     print("  2. Build")
     print("  3. Config foundation")
     print("  4. Runtime tests")
-    print("  5. HTTP request parser")
+    print("  5. HTTP tests")
     print("  6. CGI (planned)")
     print("  7. Stress (planned)")
     print("  8. List sections")

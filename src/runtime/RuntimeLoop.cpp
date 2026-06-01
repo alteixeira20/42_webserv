@@ -1,5 +1,8 @@
 #include "runtime/RuntimeLoop.hpp"
 
+#include "http/HttpResponse.hpp"
+#include "http/ResponseBuilder.hpp"
+
 RuntimeLoopStats::RuntimeLoopStats(void) :
 	cycles(0),
 	listenerEvents(0),
@@ -39,6 +42,7 @@ RuntimeLoopStats	RuntimeLoop::runCycle(int timeoutMs)
 	stats.cycles = 1;
 	for (std::size_t i = 0; i < events.size(); ++i)
 		handleEvent(events[i], stats);
+	queueProcessingResponses();
 	stats.removedClients += _clients.removeClosing(_eventLoop);
 	return (stats);
 }
@@ -92,4 +96,32 @@ void	RuntimeLoop::handleClientEvent(const EventLoopEvent &event,
 	stats.bytesRead += result.bytes;
 	result = _io.handleWritable(event);
 	stats.bytesWritten += result.bytes;
+	closeIfResponseComplete(*event.client);
+}
+
+void	RuntimeLoop::queueProcessingResponses(void)
+{
+	ResponseBuilder	builder;
+
+	for (ClientManager::ConnectionList::iterator it =
+		_clients.connections().begin(); it != _clients.connections().end();
+		++it)
+	{
+		if (it->state() == ClientConnection::PROCESSING
+			&& it->hasParsedRequest())
+		{
+			HttpResponse	response = builder.buildSimpleResponse(
+					it->getParsedRequest());
+
+			it->appendWriteData(response.serialize());
+			it->setState(ClientConnection::WRITING_RESPONSE);
+		}
+	}
+}
+
+void	RuntimeLoop::closeIfResponseComplete(ClientConnection &client)
+{
+	if (client.state() == ClientConnection::WRITING_RESPONSE
+		&& client.writeBuffer().empty())
+		client.closeWithReason("response complete");
 }
