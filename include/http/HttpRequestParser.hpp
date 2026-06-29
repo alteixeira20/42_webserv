@@ -1,9 +1,9 @@
 #ifndef HTTP_REQUEST_PARSER_HPP
 # define HTTP_REQUEST_PARSER_HPP
 
-# include <cstddef>
-# include <string>
-# include "http/HttpRequest.hpp"
+#include <cstddef>
+#include <string>
+#include "http/HttpRequest.hpp"
 
 /*
 ** Incremental HTTP/1.x request parser.
@@ -19,6 +19,8 @@ class HttpRequestParser
 		{
 			PARSING_REQUEST_LINE,
 			PARSING_HEADERS,
+			PARSING_BODY,
+			PARSING_CHUNKED_BODY,
 			PARSING_DONE,
 			PARSING_ERROR
 		};
@@ -44,15 +46,31 @@ class HttpRequestParser
 		unsigned int		_errorStatus;
 		std::size_t			_headerBytes;
 		std::size_t			_maxHeaderSize;
+		std::size_t			_contentLength;
+		bool				_isChunked;
+		std::size_t			_chunkRemainder;
+		bool				_chunkExpectingCrlf;
+		std::string			_decodedBody;
 
 		void				parseAvailable();
 		void				parseRequestLine(const std::string &line);
 		void				parseHeaderLine(const std::string &line);
+		void				parseBodyAvailable();
+		void				parseChunkedBodyAvailable();
+		void				finishHeaders();
 		void				fail(unsigned int status);
 
 		bool				extractLine(std::string &line);
 		bool				isValidTarget(const std::string &target) const;
 		bool				isHeaderSectionTooLarge() const;
+		bool				isContentLengthHeader(
+								const std::string &name) const;
+		bool				parseContentLength();
+		bool				isContentLengthValueValid(
+								const std::string &value) const;
+		bool				isChunkedTransferEncoding() const;
+		bool				parseChunkSize(const std::string &line,
+								std::size_t &size) const;
 		std::string			trim(const std::string &value) const;
 };
 
