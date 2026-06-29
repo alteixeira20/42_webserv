@@ -88,6 +88,43 @@ static void	test_split_request_is_parsed_across_appends()
 		"expected split complete headers to move connection to processing");
 }
 
+static void	test_post_body_keeps_connection_reading_until_complete()
+{
+	ClientConnection	connection(42, 7);
+
+	connection.appendReadData("POST /submit HTTP/1.1\r\n"
+		"Host: localhost\r\nContent-Length: 11\r\n\r\nhello");
+	assert_true(!connection.hasParsedRequest(),
+		"partial body should not expose a complete request");
+	assert_true(connection.state() == ClientConnection::READING_BODY,
+		"connection should keep reading while body is incomplete");
+	assert_true(connection.wantsRead(),
+		"connection should still want reads for incomplete body");
+	connection.appendReadData(" world");
+	assert_true(connection.hasParsedRequest(),
+		"complete body should expose parsed request");
+	assert_true(connection.state() == ClientConnection::PROCESSING,
+		"complete body should move connection to processing");
+	assert_true(connection.getParsedRequest().getBody() == "hello world",
+		"parsed request body should be accessible");
+}
+
+static void	test_invalid_content_length_closes_connection()
+{
+	ClientConnection	connection(42, 7);
+
+	connection.appendReadData("POST /submit HTTP/1.1\r\n"
+		"Content-Length: nope\r\n\r\n");
+	assert_true(connection.hasParserError(),
+		"invalid content length should expose parser error");
+	assert_true(connection.parserErrorStatus() == 400,
+		"invalid content length status should be visible");
+	assert_true(connection.state() == ClientConnection::CLOSING,
+		"invalid content length should close connection");
+	assert_true(connection.closeReason() == "http request parse error",
+		"invalid content length should use parser close reason");
+}
+
 static void	test_parser_completion_is_exposed()
 {
 	ClientConnection	connection(42, 7);
@@ -132,6 +169,27 @@ static void	test_closing_records_reason_and_disables_io()
 	assert_true(!connection.wantsWrite(), "closing clients should not want writes");
 }
 
+static void	test_chunked_body_keeps_connection_reading_until_complete()
+{
+	ClientConnection	connection(42, 7);
+
+	connection.appendReadData("POST /upload HTTP/1.1\r\n"
+		"Host: localhost\r\nTransfer-Encoding: chunked\r\n\r\n");
+	assert_true(!connection.hasParsedRequest(),
+		"chunked request with no chunks yet should not be complete");
+	assert_true(connection.state() == ClientConnection::READING_BODY,
+		"connection should keep reading for chunked body");
+	assert_true(connection.wantsRead(),
+		"connection should want reads while awaiting chunk data");
+	connection.appendReadData("5\r\nhello\r\n0\r\n\r\n");
+	assert_true(connection.hasParsedRequest(),
+		"chunked request should complete after last chunk");
+	assert_true(connection.state() == ClientConnection::PROCESSING,
+		"complete chunked request should move to processing");
+	assert_true(connection.getParsedRequest().getBody() == "hello",
+		"chunked body should be decoded and stored");
+}
+
 static void	test_timeout_uses_last_activity()
 {
 	ClientConnection	connection(42, 7);
@@ -148,7 +206,7 @@ static void	test_timeout_uses_last_activity()
 		"timeout should expire after full timeout interval");
 }
 
-int	main(void)
+int	main()
 {
 	try
 	{
@@ -156,6 +214,9 @@ int	main(void)
 		test_buffers_and_poll_intent_follow_state();
 		test_complete_get_request_is_parsed();
 		test_split_request_is_parsed_across_appends();
+		test_post_body_keeps_connection_reading_until_complete();
+		test_invalid_content_length_closes_connection();
+		test_chunked_body_keeps_connection_reading_until_complete();
 		test_parser_completion_is_exposed();
 		test_parser_error_closes_connection();
 		test_closing_records_reason_and_disables_io();

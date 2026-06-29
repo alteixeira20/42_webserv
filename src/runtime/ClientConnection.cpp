@@ -81,7 +81,7 @@ void	ClientConnection::setState(State state)
 void	ClientConnection::appendReadData(const std::string &data)
 {
 	_readBuffer += data;
-	if (_state == READING_HEADERS)
+	if (_state == READING_HEADERS || _state == READING_BODY)
 		parseReadData(data);
 	touch();
 }
@@ -140,4 +140,7 @@ void	ClientConnection::parseReadData(const std::string &data)
 		closeWithReason("http request parse error");
 	else if (_requestParser.isComplete())
 		setState(PROCESSING);
+	else if (_requestParser.getState() == HttpRequestParser::PARSING_BODY
+		|| _requestParser.getState() == HttpRequestParser::PARSING_CHUNKED_BODY)
+		setState(READING_BODY);
 }
