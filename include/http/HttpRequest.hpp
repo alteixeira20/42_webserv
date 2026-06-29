@@ -1,9 +1,10 @@
 #ifndef HTTP_REQUEST_HPP
 # define HTTP_REQUEST_HPP
 
-# include <map>
-# include <string>
-# include "http/HttpMethod.hpp"
+#include <cstddef>
+#include <map>
+#include <string>
+#include "http/HttpMethod.hpp"
 
 /*
 ** HttpRequest stores the structured result of HTTP request parsing.
@@ -29,11 +30,14 @@ class HttpRequest
 		void				setVersion(const std::string &version);
 		void				setHeader(const std::string &name,
 								const std::string &value);
+		void				setBody(const std::string &body);
 
 		HttpMethod			getMethod() const;
 		const std::string	&getTarget() const;
 		const std::string	&getVersion() const;
 		const HeaderMap		&getHeaders() const;
+		const std::string	&getBody() const;
+		std::size_t			bodySize() const;
 
 		bool				hasHeader(const std::string &name) const;
 		std::string			getHeader(const std::string &name) const;
@@ -44,8 +48,9 @@ class HttpRequest
 		std::string			_version;
 		HeaderMap			_headers;
 
-		std::string			normalizeHeaderName(
-								const std::string &name) const;
+		std::string			_body;
+
+		std::string			normalizeHeaderName(const std::string &name) const;
 };
 
 #endif

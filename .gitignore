@@ -31,6 +31,11 @@ tests/tmp/
 /tests/runtime/test_runtime_loop
 /tests/runtime/test_server_runtime
 /tests/http/test_http_request_parser
+/tests/http/test_http_request_resolver
+/tests/http/test_http_request_evaluator
+
+# Local dev configs (machine-specific, never committed)
+/configs/local-*.conf
 
 # Logs
 *.log

@@ -4,7 +4,8 @@ HttpRequest::HttpRequest()
 	: _method(HTTP_METHOD_UNKNOWN),
 	  _target(),
 	  _version(),
-	  _headers()
+	  _headers(),
+	  _body()
 {
 }
 
@@ -12,7 +13,8 @@ HttpRequest::HttpRequest(const HttpRequest &other)
 	: _method(other._method),
 	  _target(other._target),
 	  _version(other._version),
-	  _headers(other._headers)
+	  _headers(other._headers),
+	  _body(other._body)
 {
 }
 
@@ -24,6 +26,7 @@ HttpRequest	&HttpRequest::operator=(const HttpRequest &other)
 		_target = other._target;
 		_version = other._version;
 		_headers = other._headers;
+		_body = other._body;
 	}
 
 	return (*this);
@@ -39,6 +42,7 @@ void	HttpRequest::clear()
 	_target.clear();
 	_version.clear();
 	_headers.clear();
+	_body.clear();
 }
 
 void	HttpRequest::setMethod(HttpMethod method)
@@ -62,6 +66,11 @@ void	HttpRequest::setHeader(const std::string &name,
 	_headers[normalizeHeaderName(name)] = value;
 }
 
+void	HttpRequest::setBody(const std::string &body)
+{
+	_body = body;
+}
+
 HttpMethod	HttpRequest::getMethod() const
 {
 	return (_method);
@@ -80,6 +89,16 @@ const std::string	&HttpRequest::getVersion() const
 const HttpRequest::HeaderMap	&HttpRequest::getHeaders() const
 {
 	return (_headers);
+}
+
+const std::string	&HttpRequest::getBody() const
+{
+	return (_body);
+}
+
+std::size_t	HttpRequest::bodySize() const
+{
+	return (_body.size());
 }
 
 bool	HttpRequest::hasHeader(const std::string &name) const

@@ -22,7 +22,9 @@ TEST_BINS	:= tests/config/test_config_foundation \
 			   tests/runtime/test_listener_manager \
 			   tests/runtime/test_runtime_loop \
 			   tests/runtime/test_server_runtime \
-			   tests/http/test_http_request_parser
+			   tests/http/test_http_request_parser \
+			   tests/http/test_http_request_resolver \
+			   tests/http/test_http_request_evaluator
 
 COMMON_SRCS	:= \
 	$(SRC_DIR)/config/Config.cpp \
@@ -41,6 +43,8 @@ COMMON_SRCS	:= \
 	$(SRC_DIR)/http/HttpMethod.cpp \
 	$(SRC_DIR)/http/HttpRequest.cpp \
 	$(SRC_DIR)/http/HttpRequestParser.cpp \
+	$(SRC_DIR)/http/HttpRequestResolver.cpp \
+	$(SRC_DIR)/http/HttpRequestEvaluator.cpp \
 	$(SRC_DIR)/runtime/ClientConnection.cpp \
 	$(SRC_DIR)/runtime/ClientIo.cpp \
 	$(SRC_DIR)/runtime/ClientManager.cpp \
@@ -67,6 +71,8 @@ TEST_RUNTIME_LOOP	:= tests/runtime/test_runtime_loop
 TEST_SERVER_RUNTIME	:= tests/runtime/test_server_runtime
 TEST_CONFIG			:= tests/config/test_config_foundation
 TEST_HTTP_REQUEST	:= tests/http/test_http_request_parser
+TEST_HTTP_RESOLVER	:= tests/http/test_http_request_resolver
+TEST_HTTP_EVALUATOR	:= tests/http/test_http_request_evaluator
 
 HTTP_SRCS			:= \
 	$(SRC_DIR)/http/HttpMethod.cpp \
@@ -116,6 +122,12 @@ $(TEST_SERVER_RUNTIME): tests/runtime/test_server_runtime.cpp $(COMMON_SRCS)
 $(TEST_HTTP_REQUEST): tests/http/test_http_request_parser.cpp $(COMMON_SRCS)
 	$(CXX) $(CXXFLAGS) $(INC) tests/http/test_http_request_parser.cpp $(COMMON_SRCS) -o $(TEST_HTTP_REQUEST)
 
+$(TEST_HTTP_RESOLVER): tests/http/test_http_request_resolver.cpp $(COMMON_SRCS)
+	$(CXX) $(CXXFLAGS) $(INC) tests/http/test_http_request_resolver.cpp $(COMMON_SRCS) -o $(TEST_HTTP_RESOLVER)
+
+$(TEST_HTTP_EVALUATOR): tests/http/test_http_request_evaluator.cpp $(COMMON_SRCS)
+	$(CXX) $(CXXFLAGS) $(INC) tests/http/test_http_request_evaluator.cpp $(COMMON_SRCS) -o $(TEST_HTTP_EVALUATOR)
+
 test_config_internal: $(TEST_CONFIG)
 	./$(TEST_CONFIG)
 
@@ -130,8 +142,10 @@ test_runtime_internal: $(TEST_LISTENER) $(TEST_CLIENT) $(TEST_CLIENT_CLEANUP) $(
 	./$(TEST_RUNTIME_LOOP)
 	./$(TEST_SERVER_RUNTIME)
 
-test_http_internal: $(TEST_HTTP_REQUEST)
+test_http_internal: $(TEST_HTTP_REQUEST) $(TEST_HTTP_RESOLVER) $(TEST_HTTP_EVALUATOR)
 	./$(TEST_HTTP_REQUEST)
+	./$(TEST_HTTP_RESOLVER)
+	./$(TEST_HTTP_EVALUATOR)
 
 test:
 	python3 tests/run.py
@@ -232,7 +246,7 @@ fclean: clean
 	rm -f $(NAME) $(TEST_LISTENER) $(TEST_CLIENT) $(TEST_CLIENT_CLEANUP)
 	rm -f $(TEST_CLIENT_IO) $(TEST_CLIENT_MANAGER) $(TEST_DUMMY_RESPONSE)
 	rm -f $(TEST_EVENT_LOOP) $(TEST_RUNTIME_LOOP) $(TEST_SERVER_RUNTIME)
-	rm -f $(TEST_CONFIG) $(TEST_HTTP_REQUEST)
+	rm -f $(TEST_CONFIG) $(TEST_HTTP_REQUEST) $(TEST_HTTP_RESOLVER) $(TEST_HTTP_EVALUATOR)
 
 re: fclean all
 
